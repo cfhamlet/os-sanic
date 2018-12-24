@@ -1,0 +1,10 @@
+[run]
+parallel = true
+branch = true
+source = os_sanic
+
+[paths]
+source =
+    src/os_sanic
+    .tox/*/lib/python*/site-packages/os_sanic
+    .tox/*/site-packages/os_sanic
