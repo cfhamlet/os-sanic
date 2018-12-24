@@ -1,5 +1,11 @@
-HOST = '127.0.0.1'
-PORT = '8001'
 DEBUG = False
-ACCESS_LOG = True
+
 LOG_LEVEL = 'INFO'
+
+ACCESS_LOG = True
+
+KEEP_ALIVE = True
+
+HOST = '127.0.0.1'
+
+PORT = 8001

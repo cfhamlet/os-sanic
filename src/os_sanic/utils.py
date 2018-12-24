@@ -1,3 +1,4 @@
+import collections
 import inspect
 from importlib import import_module
 from pkgutil import iter_modules
@@ -31,3 +32,12 @@ def iter_classes(module_path, base_class, include_base_class=False, skip_fail=Tr
                      if isinstance(base_class, tuple)
                      else obj != base_class):
                 yield obj
+
+
+def deep_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, collections.Mapping):
+            d[k] = deep_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d

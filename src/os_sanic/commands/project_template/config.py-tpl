@@ -1,0 +1,13 @@
+# coding: utf-8
+
+DEBUG = {{debug}}
+
+LOG_LEVEL = {{log_level}}
+
+ACCESS_LOG = {{access_log}}
+
+HOST = {{host}}
+
+PORT = {{port}}
+
+INSTALLED_APPS = []

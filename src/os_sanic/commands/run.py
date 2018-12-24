@@ -5,3 +5,4 @@ class RunCommand(Command):
     name = 'run'
     scope = CommandScope.PROJECT
     help = 'run server'
+
