@@ -6,6 +6,7 @@ from sanic.log import LOGGING_CONFIG_DEFAULTS, logger
 from os_sanic.application import ApplicationManager
 from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
 from os_sanic.utils import deep_update
+from os_sanic.workflow import Workflowable
 
 LOGGIN_CONFIG_PATCH = dict(
 
@@ -18,7 +19,7 @@ LOGGIN_CONFIG_PATCH = dict(
 )
 
 
-class Server(object):
+class Server(Workflowable):
     def __init__(self, name, config, log_config=None, **kwargs):
         if not log_config:
             log_config = deep_update({}, LOGGING_CONFIG_DEFAULTS)
@@ -30,6 +31,24 @@ class Server(object):
         logger.setLevel(self._sanic.config.LOG_LEVEL)
         logger.debug('Config: {}'.format(self._sanic.config))
         self._app_manager = ApplicationManager.create(self._sanic)
+
+        @self._sanic.listener('before_server_start')
+        def setup(app, loop):
+            self.setup()
+
+        @self._sanic.listener('after_server_stop')
+        def cleanup(app, loop):
+            self.cleanup()
+
+        @self._sanic.listener('after_server_start')
+        def run(app, loop):
+            self._app_manager.run()
+
+    def setup(self):
+        self._app_manager.setup()
+
+    def cleanup(self):
+        self._app_manager.cleaup()
 
     def _run_args(self):
         argspec = inspect.getargspec(self._sanic.run)

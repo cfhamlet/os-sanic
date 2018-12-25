@@ -21,17 +21,32 @@ def walk_modules(module_path, skip_fail=True):
                 yield m
 
 
+def expected_cls(module, cls, base_class, include_base_class=False):
+    if inspect.isclass(cls) and \
+            issubclass(cls, base_class) and \
+            cls.__module__ == module.__name__ and \
+            (include_base_class or
+             all([cls != base for base in base_class])
+             if isinstance(base_class, tuple)
+             else cls != base_class):
+        return True
+    return False
+
+
 def iter_classes(module_path, base_class, include_base_class=False, skip_fail=True):
     for module in walk_modules(module_path, skip_fail=skip_fail):
         for obj in vars(module).values():
-            if inspect.isclass(obj) and \
-                    issubclass(obj, base_class) and \
-                    obj.__module__ == module.__name__ and \
-                    (include_base_class or
-                     all([obj != base for base in base_class])
-                     if isinstance(base_class, tuple)
-                     else obj != base_class):
+            if expected_cls(module, obj, base_class, include_base_class):
                 yield obj
+
+
+def load_class(class_path, base_class, include_base_class=False):
+    module_path, class_name = class_path.rsplit('.', 1)
+    module = import_module(module_path)
+    cls = getattr(module, class_name)
+    if expected_cls(module, cls, base_class, include_base_class):
+        return cls
+    return None
 
 
 def deep_update(d, u):
