@@ -6,5 +6,5 @@ class StartProjectCommand(Command):
     help='create new project'
 
     def run(self, args):
-        from  os_sanic.config import create_config
-        print(create_config())
+        from  os_sanic.config import create_sanic_config
+        print(create_sanic_config())

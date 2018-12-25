@@ -1,4 +1,5 @@
 from importlib import import_module
+
 from os_config import Config
 
 
@@ -9,6 +10,7 @@ class Application(object):
 
     @staticmethod
     def create(app_config):
+        print(app_config)
         package = app_config['package']
         name = package.split('.')[-1]
         name = app_config.get('namespace', name)
@@ -19,7 +21,8 @@ class Application(object):
 
 class ApplicationManager(object):
 
-    def __init__(self):
+    def __init__(self, sanic_app):
+        self._sanic = sanic_app
         self._apps = {}
 
     def load_app(self, app_config):
@@ -27,8 +30,10 @@ class ApplicationManager(object):
         self._apps[app.name] = app
 
     @staticmethod
-    def create(app_configs):
-        am = ApplicationManager()
-        for app_config in app_configs:
+    def create(sanic_app):
+
+        am = ApplicationManager(sanic_app)
+        for app_config in Config.create(
+                apps=sanic_app.config.get('INSTALLED_APPS', [])).apps:
             am.load_app(app_config)
         return am

@@ -54,7 +54,8 @@ def load_subparser(parser, commands):
             description=cmd.description if cmd.description
             else cmd.help.capitalize(),
             help=cmd.help,
-            usage=_usage(command=name)
+            usage=_usage(command=name),
+            conflict_handler='resolve',
         )
         cmd.add_arguments(cmd_parser)
 

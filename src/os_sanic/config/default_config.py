@@ -9,3 +9,5 @@ KEEP_ALIVE = True
 HOST = '127.0.0.1'
 
 PORT = 8001
+
+INSTALLED_APPS = []
