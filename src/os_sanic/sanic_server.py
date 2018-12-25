@@ -1,3 +1,5 @@
+import inspect
+
 from sanic import Sanic
 from sanic.log import LOGGING_CONFIG_DEFAULTS, logger
 
@@ -29,10 +31,20 @@ class Server(object):
         logger.debug('Config: {}'.format(self._sanic.config))
         self._app_manager = ApplicationManager.create(self._sanic)
 
+    def _run_args(self):
+        argspec = inspect.getargspec(self._sanic.run)
+        run_args = {}
+        offset = len(argspec.args)-len(argspec.defaults)
+        for idx in range(len(argspec.defaults)-1, -1, -1):
+            default = argspec.defaults[idx]
+            idx += offset
+            name = argspec.args[idx]
+            run_args[name] = self._sanic.config.get(name.upper(), default)
+
+        return run_args
+
     def run(self):
-        config = self._sanic.config
-        self._sanic.run(host=config.HOST, port=config.PORT,
-                        debug=config.DEBUG, access_log=config.ACCESS_LOG)
+        self._sanic.run(**self._run_args())
 
     @staticmethod
     def create(name, config_file=None, env_prefix=SANIC_ENV_PREFIX,
