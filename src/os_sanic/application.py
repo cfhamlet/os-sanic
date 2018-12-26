@@ -5,47 +5,34 @@ from importlib import import_module
 from os_config import Config
 
 from os_sanic.extension import ExtensionManager
+from os_sanic.log import getLogger
 from os_sanic.view import ViewManager
 from os_sanic.workflow import Workflowable
 
 
 class Application(Workflowable):
 
-    def __init__(self, sanic, cfg, core, config):
+    def __init__(self, sanic, name, app_cfg, core_config, user_config):
         self._sanic = sanic
-        self._cfg = cfg
-        self._core = core
-        self._config = config
-        self._ext_manager = ExtensionManager.create(sanic, cfg, core, config)
-        ViewManager.load(sanic, cfg, core, config)
-
-    @property
-    def name(self):
-        return self._cfg.name
-
-    def setup(self):
-        self._ext_manager.setup()
-
-    def run(self):
-        self._ext_manager.run()
-
-    def cleanup(self):
-        self._ext_manager.cleanup()
+        self.name = name
+        self._app_cfg = app_cfg
+        self._ext_manager = ExtensionManager.create(
+            sanic, app_cfg, core_config, user_config)
+        ViewManager.load(sanic, name, app_cfg, core_config, user_config)
+        [setattr(self, m, lambda _: getattr(self._ext_manager, m)())
+         for m in ('setup', 'run', 'cleanup')]
 
     @staticmethod
-    def create(sanic, cfg):
-        package = cfg.get('package')
-        name = package.split('.')[-1]
-        cfg.name = cfg.get('name', name)
+    def create(sanic, name, app_cfg):
 
-        app_module = import_module('.'.join((package, 'app')))
-        core = Config.from_object(app_module)
-        config = Config.create()
-        if cfg.get('config'):
-            f = os.path.join(os.getcwd(), cfg.config)
-            config = Config.from_pyfile(f)
+        app_module = import_module('.'.join((app_cfg.package, 'app')))
+        core_config = Config.from_object(app_module)
+        user_config = Config.create()
+        if app_cfg.get('config'):
+            f = os.path.join(os.getcwd(), app_cfg.config)
+            user_config = Config.from_pyfile(f)
 
-        return Application(sanic, cfg, core, config)
+        return Application(sanic, name, app_cfg, core_config, user_config)
 
 
 class ApplicationManager(Workflowable):
@@ -53,25 +40,44 @@ class ApplicationManager(Workflowable):
     def __init__(self, sanic):
         self._sanic = sanic
         self._apps = OrderedDict()
+        self._logger = getLogger(self.__class__.__name__)
 
-    def load_app(self, cfg):
-        app = Application.create(self._sanic, cfg)
-        self._apps[app.name] = app
+    def load_app(self, app_cfg):
+        try:
+            if isinstance(app_cfg, str):
+                app_cfg = Config.create(package=app_cfg)
+            if not app_cfg.get('package'):
+                self._logger.warn(
+                    'Load app skip, no package {}'.format(app_cfg))
+                return
+
+            name = app_cfg.package.split('.')[-1]
+            name = app_cfg.get('name', name)
+            if name in self._apps:
+                self._logger.warn('App already exists, {}'.format(name))
+                return
+
+            self._logger.debug(
+                'Load app, {} {}'.format(name, app_cfg.package))
+            app = Application.create(self._sanic, name, app_cfg)
+            self._apps[name] = app
+        except Exception as e:
+            self._logger.error('Load app fail, {}, {}'.format(e, app_cfg))
 
     def run(self):
-        list(map(lambda x: x.run(), self._apps.values()))
+        [x.run(self) for x in self._apps.values()]
 
     def setup(self):
-        list(map(lambda x: x.setup(), self._apps.values()))
+        [x.setup(self) for x in self._apps.values()]
 
-    def cleaup(self):
-        list(map(lambda x: x.cleanup(), reversed(self._apps.values())))
+    def cleanup(self):
+        [x.cleanup(self) for x in reversed(self._apps.values())]
 
     @staticmethod
     def create(sanic):
 
         am = ApplicationManager(sanic)
-        for cfg in Config.create(
+        for app_cfg in Config.create(
                 apps=sanic.config.get('INSTALLED_APPS', [])).apps:
-            am.load_app(cfg)
+            am.load_app(app_cfg)
         return am

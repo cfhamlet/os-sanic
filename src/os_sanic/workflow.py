@@ -5,5 +5,5 @@ class Workflowable(object):
     def run(self):
         pass
 
-    def cleaup(self):
+    def cleanup(self):
         pass

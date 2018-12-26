@@ -40,9 +40,9 @@ def iter_classes(module_path, base_class, include_base_class=False, skip_fail=Tr
                 yield obj
 
 
-def load_class(class_path, base_class, include_base_class=False):
+def load_class(class_path, base_class, include_base_class=False, package=None):
     module_path, class_name = class_path.rsplit('.', 1)
-    module = import_module(module_path)
+    module = import_module(module_path, package=package)
     cls = getattr(module, class_name)
     if expected_cls(module, cls, base_class, include_base_class):
         return cls

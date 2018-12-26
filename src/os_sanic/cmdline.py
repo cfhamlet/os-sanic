@@ -7,7 +7,7 @@ from os_sanic.utils import iter_classes, walk_modules
 
 
 def _usage(command=None):
-    usage_string = '\r%(prog)s {version}\n\nUsage: %(prog)s '
+    usage_string = '\ros-sanic {version}\n\nUsage: %(prog)s '
     if command is None:
         usage_string += '[OPTIONS] COMMAND'
     else:
@@ -26,7 +26,7 @@ def _create_argparser():
         formatter_class=RawDescriptionHelpFormatter,
     )
     parser.add_argument('-v', '--version', action='version',
-                        version='%(prog)s {version}'.format(
+                        version='os-sanic {version}'.format(
                             version=os_sanic.__version__)
                         )
 
@@ -35,7 +35,7 @@ def _create_argparser():
 
 def find_commands(cmd_module_path, scope=None):
     cmds = {}
-    for cmd_module in walk_modules(cmd_module_path):
+    for cmd_module in walk_modules(cmd_module_path, skip_fail=False):
         for cmd_cls in iter_classes(cmd_module.__name__, Command):
             if not scope or scope == cmd_cls.scope:
                 cmds[cmd_cls.name] = cmd_cls()
@@ -61,7 +61,8 @@ def load_subparser(parser, commands):
 
 
 def execute(argv=None, scope='global'):
-    argv = argv or sys.argv[1:]
+    argv = argv or sys.argv
+    argv = argv[1:]
     scope = CommandScope[scope.upper()]
 
     parser = _create_argparser()

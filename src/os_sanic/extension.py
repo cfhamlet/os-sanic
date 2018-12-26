@@ -1,8 +1,10 @@
 from collections import OrderedDict
+from functools import partial
 
 from os_config import Config
 from sanic.views import HTTPMethodView
 
+from os_sanic.log import getLogger, logger
 from os_sanic.utils import load_class
 from os_sanic.workflow import Workflowable
 
@@ -13,51 +15,71 @@ class Extension(Workflowable):
         self._sanic = sanic
         self._config = config
 
-    @property
-    def name(self):
-        return self._config.name
+
+    @staticmethod
+    def create(sanic, app_cfg, ext_cfg, user_config):
+        ec = ext_cfg.extension_class
+        config = Config.create()
+        config.update(ext_cfg)
+        if user_config is not None:
+            config.update(user_config)
+        config.extension_class = ec
+        package = None
+        if ec.startswith('.'):
+            package = app_cfg.package
+        cls = load_class(ec, Extension, package=package)
+        return cls(sanic, config)
 
 
 class ExtensionManager(Workflowable):
     def __init__(self, sanic):
         self._sanic = sanic
         self._extensions = OrderedDict()
+        self._logger = getLogger(self.__class__.__name__)
+        [setattr(self, m, partial(self.__call, m))
+         for m in ('run', 'setup', 'cleanup')]
 
-    def run(self):
-        list(map(lambda x: x.run(), self._extensions.values()))
+    def get_extension(self, name):
+        return self._extensions[name]
 
-    def setup(self):
-        list(map(lambda x: x.setup(), self._extensions.values()))
+    def __call(self, method):
+        for key, ext in self._extensions.items():
+            try:
+                getattr(ext, method)()
+            except Exception as e:
+                self._logger.error(
+                    'Extension error {}.{}, {}'.format(key, method, e))
 
-    def cleanup(self):
-        list(map(lambda x: x.cleanup(), reversed(self._extensions.values())))
+    def load_extension(self, app_cfg, ext_cfg, user_config):
 
-    def load_extension(self, cfg, config):
-        ec = cfg.extension_class
-        c = Config.create()
-        c.update(cfg)
-        if config is not None:
-            c.update(config)
-        c.extension_class = ec
-        cls = load_class(ec, Extension)
-
-        extension = cls(self._sanic, c)
-        self._extensions[extension.name] = extension
+        try:
+            name = ext_cfg.name
+            if name in self._extensions:
+                self._logger.warn(
+                    'Extension already exists, {}'.format(name))
+                return
+            extension = Extension.create(
+                self._sanic, app_cfg, ext_cfg, user_config)
+            self._extensions[name] = extension
+            self._logger.debug('Load extension, {} {}'.format(
+                name, extension.__class__))
+        except Exception as e:
+            self._logger.error('Load extension fail {}, {}'.format(e, ext_cfg))
 
     @staticmethod
-    def create(sanic, app_cfg, core, config):
+    def create(sanic, app_cfg, core_config, user_config):
 
         em = ExtensionManager(sanic)
 
-        configs = {}
-        for c in config.get('EXTENSIONS', []):
-            name = c.get('name')
-            if name:
-                configs[name] = c
-
-        for cfg in core.get('EXTENSIONS', []):
+        user_configs = {}
+        for cfg in user_config.get('EXTENSIONS', []):
             name = cfg.get('name')
             if name:
-                em.load_extension(cfg, configs.get(name))
+                user_configs[name] = cfg
+
+        for ext_cfg in core_config.get('EXTENSIONS', []):
+            name = ext_cfg.get('name')
+            if name:
+                em.load_extension(app_cfg, ext_cfg, user_configs.get(name))
 
         return em

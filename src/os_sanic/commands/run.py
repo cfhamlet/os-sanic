@@ -72,7 +72,6 @@ class RunCommand(Command):
         for k, v in args._get_kwargs():
             if v:
                 kwargs[k.upper()] = v
-
         self._server = Server.create(
             'os-sanic',
             config_file=config_file,
