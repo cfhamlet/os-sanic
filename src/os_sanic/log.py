@@ -1,5 +1,7 @@
-from sanic.log import logger
 import logging
+import sys
+
+from sanic.log import logger
 
 
 def getLogger(name):
@@ -17,7 +19,16 @@ LOGGING_CONFIG_PATCH = dict(
             "format": "%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
             "datefmt": "[%Y-%m-%d %H:%M:%S]",
         },
-    }
+    },
+    handlers={
+        "console": {
+            "stream": sys.stderr
+        },
+        "access_console": {
+            "stream": sys.stderr
+        },
+    },
+
 )
 
 BASE_LOGGING = {

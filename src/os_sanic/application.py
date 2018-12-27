@@ -30,7 +30,7 @@ class Application(Workflowable):
             await getattr(self._ext_manager, method)()
         except Exception as e:
             self._logger.error(
-                'App error {}.{}, {}'.format(self.name, method, e))
+                'Method error {}, {}'.format(method, e))
 
     @staticmethod
     def create(sanic, app_name, app_cfg):
@@ -51,6 +51,10 @@ class ApplicationManager(Workflowable):
         self._sanic = sanic
         self._apps = OrderedDict()
         self._logger = getLogger(self.__class__.__name__)
+        self._root_app = None
+
+    def get_app(self, name):
+        return self._apps[name]
 
     def load_app(self, app_cfg):
         try:
@@ -60,6 +64,11 @@ class ApplicationManager(Workflowable):
                 self._logger.warn(
                     'Load app skip, no package {}'.format(app_cfg))
                 return
+
+            if Config.get(app_cfg, 'root') and self._root_app:
+                self._logger.warn(
+                    'Root app exist: {}'.format(self._root_app.name))
+                Config.pop(app_cfg, 'root')
 
             app_name = app_cfg.package.split('.')[-1]
             app_name = Config.get(app_cfg, 'name', app_name)
