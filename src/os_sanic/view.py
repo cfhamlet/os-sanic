@@ -19,11 +19,11 @@ class ViewManager(object):
             pattern, view_class = view_cfg.pattern, view_cfg.view_class
 
         view_config = Config.create()
-        view_config.update(view_cfg)
+        Config.update(view_config, view_cfg)
         if pattern in configs:
-            view_config.update(configs.get(pattern))
-        view_config.pop('pattern')
-        view_config.pop('view_class')
+            Config.update(view_config, configs.get(pattern))
+        Config.pop(view_config, 'pattern')
+        Config.pop(view_config, 'view_class')
 
         package = None
         if view_class.startswith('.'):
@@ -44,19 +44,19 @@ class ViewManager(object):
         logger = getLogger('ViewManager')
 
         prefix = None
-        if not app_cfg.get('root'):
-            prefix = app_cfg.get('prefix', '/' + app_name)
+        if not Config.get(app_cfg, 'root'):
+            prefix = Config.get(app_cfg, 'prefix', '/' + app_name)
         bp = Blueprint(app_name, url_prefix=prefix)
 
         configs = {}
-        for v in user_config.get('VIEWS', []):
-            pattern = v.get('pattern')
+        for v in Config.get(user_config, 'VIEWS', []):
+            pattern = Config.get(v, 'pattern')
             if pattern:
-                v.pop('pattern')
+                Config.pop(v, 'pattern')
                 configs[pattern] = v
 
         logger = getLogger('ViewManager')
-        for view_cfg in core_config.get('VIEWS', []):
+        for view_cfg in Config.get(core_config, 'VIEWS', []):
             try:
                 pattern, view_cls = ViewManager.load_view(
                     bp, app_cfg, view_cfg, configs)

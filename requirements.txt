@@ -1,3 +1,3 @@
 sanic>=0.8
 jinja2
-os-config>0.1.8
+os-config>=0.2

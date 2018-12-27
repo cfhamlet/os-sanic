@@ -31,22 +31,22 @@ class Server(Workflowable):
         self._app_manager = ApplicationManager.create(self.sanic)
 
         @self.sanic.listener('before_server_start')
-        def setup(app, loop):
-            self.setup()
+        async def setup(app, loop):
+            await self.setup()
 
         @self.sanic.listener('after_server_stop')
-        def cleanup(app, loop):
-            self.cleanup()
+        async def cleanup(app, loop):
+            await self.cleanup()
 
         @self.sanic.listener('after_server_start')
-        def run(app, loop):
-            self._app_manager.run()
+        async def run(app, loop):
+            await self._app_manager.run()
 
-    def setup(self):
-        self._app_manager.setup()
+    async def setup(self):
+        await self._app_manager.setup()
 
-    def cleanup(self):
-        self._app_manager.cleanup()
+    async def cleanup(self):
+        await self._app_manager.cleanup()
 
     def _run_args(self):
         argspec = inspect.getargspec(self.sanic.run)

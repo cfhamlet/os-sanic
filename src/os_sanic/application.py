@@ -1,6 +1,8 @@
 import os
 from collections import OrderedDict
+from functools import partial
 from importlib import import_module
+from inspect import isawaitable
 
 from os_config import Config
 
@@ -16,23 +18,31 @@ class Application(Workflowable):
         self._sanic = sanic
         self.name = name
         self._app_cfg = app_cfg
+        self._logger = getLogger('App.{}'.format(name))
         self._ext_manager = ExtensionManager.create(
             sanic, app_cfg, core_config, user_config)
         ViewManager.load(sanic, name, app_cfg, core_config, user_config)
-        [setattr(self, m, lambda _: getattr(self._ext_manager, m)())
-         for m in ('setup', 'run', 'cleanup')]
+        [setattr(self, m, partial(self.__call, m))
+         for m in ('run', 'setup', 'cleanup')]
+
+    async def __call(self, method):
+        try:
+            await getattr(self._ext_manager, method)()
+        except Exception as e:
+            self._logger.error(
+                'App error {}.{}, {}'.format(self.name, method, e))
 
     @staticmethod
-    def create(sanic, name, app_cfg):
+    def create(sanic, app_name, app_cfg):
 
         app_module = import_module('.'.join((app_cfg.package, 'app')))
         core_config = Config.from_object(app_module)
         user_config = Config.create()
-        if app_cfg.get('config'):
+        if Config.get(app_cfg, 'config'):
             f = os.path.join(os.getcwd(), app_cfg.config)
             user_config = Config.from_pyfile(f)
 
-        return Application(sanic, name, app_cfg, core_config, user_config)
+        return Application(sanic, app_name, app_cfg, core_config, user_config)
 
 
 class ApplicationManager(Workflowable):
@@ -46,32 +56,35 @@ class ApplicationManager(Workflowable):
         try:
             if isinstance(app_cfg, str):
                 app_cfg = Config.create(package=app_cfg)
-            if not app_cfg.get('package'):
+            if not Config.get(app_cfg, 'package'):
                 self._logger.warn(
                     'Load app skip, no package {}'.format(app_cfg))
                 return
 
-            name = app_cfg.package.split('.')[-1]
-            name = app_cfg.get('name', name)
-            if name in self._apps:
-                self._logger.warn('App already exists, {}'.format(name))
+            app_name = app_cfg.package.split('.')[-1]
+            app_name = Config.get(app_cfg, 'name', app_name)
+            if app_name in self._apps:
+                self._logger.warn('App already exists, {}'.format(app_name))
                 return
 
             self._logger.debug(
-                'Load app, {} {}'.format(name, app_cfg.package))
-            app = Application.create(self._sanic, name, app_cfg)
-            self._apps[name] = app
+                'Load app, {} {}'.format(app_name, app_cfg.package))
+            app = Application.create(self._sanic, app_name, app_cfg)
+            self._apps[app_name] = app
         except Exception as e:
             self._logger.error('Load app fail, {}, {}'.format(e, app_cfg))
 
-    def run(self):
-        [x.run(self) for x in self._apps.values()]
+    async def run(self):
+        for app in self._apps.values():
+            await app.run()
 
-    def setup(self):
-        [x.setup(self) for x in self._apps.values()]
+    async def setup(self):
+        for app in self._apps.values():
+            await app.setup()
 
-    def cleanup(self):
-        [x.cleanup(self) for x in reversed(self._apps.values())]
+    async def cleanup(self):
+        for app in reversed(self._apps.values()):
+            await app.cleanup()
 
     @staticmethod
     def create(sanic):

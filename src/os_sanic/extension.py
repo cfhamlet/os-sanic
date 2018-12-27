@@ -1,3 +1,4 @@
+from inspect import isawaitable
 from collections import OrderedDict
 from functools import partial
 
@@ -15,14 +16,13 @@ class Extension(Workflowable):
         self._sanic = sanic
         self._config = config
 
-
     @staticmethod
     def create(sanic, app_cfg, ext_cfg, user_config):
         ec = ext_cfg.extension_class
         config = Config.create()
-        config.update(ext_cfg)
+        Config.update(config, ext_cfg)
         if user_config is not None:
-            config.update(user_config)
+            Config.update(config, user_config)
         config.extension_class = ec
         package = None
         if ec.startswith('.'):
@@ -42,10 +42,13 @@ class ExtensionManager(Workflowable):
     def get_extension(self, name):
         return self._extensions[name]
 
-    def __call(self, method):
+    async def __call(self, method):
         for key, ext in self._extensions.items():
             try:
-                getattr(ext, method)()
+                r = getattr(ext, method)()
+                if isawaitable(r):
+                    await r
+
             except Exception as e:
                 self._logger.error(
                     'Extension error {}.{}, {}'.format(key, method, e))
@@ -72,13 +75,13 @@ class ExtensionManager(Workflowable):
         em = ExtensionManager(sanic)
 
         user_configs = {}
-        for cfg in user_config.get('EXTENSIONS', []):
-            name = cfg.get('name')
+        for cfg in Config.get(user_config, 'EXTENSIONS', []):
+            name = Config.get(cfg, 'name')
             if name:
                 user_configs[name] = cfg
 
-        for ext_cfg in core_config.get('EXTENSIONS', []):
-            name = ext_cfg.get('name')
+        for ext_cfg in Config.get(core_config, 'EXTENSIONS', []):
+            name = Config.get(ext_cfg, 'name')
             if name:
                 em.load_extension(app_cfg, ext_cfg, user_configs.get(name))
 
