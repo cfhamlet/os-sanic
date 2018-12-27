@@ -19,8 +19,11 @@ class Application(Workflowable):
         self.name = name
         self._app_cfg = app_cfg
         self._logger = getLogger('App.{}'.format(name))
+        
+
         self._ext_manager = ExtensionManager.create(
             sanic, app_cfg, core_config, user_config)
+
         ViewManager.load(sanic, name, app_cfg, core_config, user_config)
         [setattr(self, m, partial(self.__call, m))
          for m in ('run', 'setup', 'cleanup')]
@@ -79,6 +82,8 @@ class ApplicationManager(Workflowable):
             self._logger.debug(
                 'Load app, {} {}'.format(app_name, app_cfg.package))
             app = Application.create(self._sanic, app_name, app_cfg)
+            if Config.get(app_cfg, 'root'):
+                self._root_app = app
             self._apps[app_name] = app
         except Exception as e:
             self._logger.error('Load app fail, {}, {}'.format(e, app_cfg))

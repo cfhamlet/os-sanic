@@ -13,8 +13,8 @@ from os_sanic.workflow import Workflowable
 class Extension(Workflowable):
 
     def __init__(self, sanic, config):
-        self._sanic = sanic
-        self._config = config
+        self.sanic = sanic
+        self.config = config
 
     @staticmethod
     def create(sanic, app_cfg, ext_cfg, user_config):

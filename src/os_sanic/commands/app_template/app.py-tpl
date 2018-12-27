@@ -1,3 +1,13 @@
-EXTENSIONS = []
+EXTENSIONS = [
+    {
+        'name': '{{extension_name}}',
+        'extension_class': '.extension.{{extension_class}}',
+    },
+]
 
-HANDLERS = []
+VIEWS = [
+    {
+        'pattern': '{{pattern}}',
+        'view_class': '.view.{{view_class}}',
+    },
+]

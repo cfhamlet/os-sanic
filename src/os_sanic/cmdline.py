@@ -6,12 +6,14 @@ from os_sanic.commands import Command, CommandScope
 from os_sanic.utils import iter_classes, walk_modules
 
 
-def _usage(command=None):
+def _usage(command=None, pos=[]):
     usage_string = '\ros-sanic {version}\n\nUsage: %(prog)s '
     if command is None:
         usage_string += '[OPTIONS] COMMAND'
     else:
         usage_string += '{command} [OPTIONS]'
+    if pos:
+        usage_string += ' '+' '.join(pos)
 
     return usage_string.format(
         version=os_sanic.__version__,
@@ -54,7 +56,7 @@ def load_subparser(parser, commands):
             description=cmd.description if cmd.description
             else cmd.help.capitalize(),
             help=cmd.help,
-            usage=_usage(command=name),
+            usage=cmd.usage if cmd.usage else _usage(command=name),
             conflict_handler='resolve',
         )
         cmd.add_arguments(cmd_parser)

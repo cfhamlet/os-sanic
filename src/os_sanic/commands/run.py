@@ -9,7 +9,7 @@ from os_sanic.sanic_server import Server
 
 class RunCommand(Command):
     name = 'run'
-    # scope = CommandScope.PROJECT
+    scope = CommandScope.PROJECT
     help = 'run server'
 
     def __init__(self):
