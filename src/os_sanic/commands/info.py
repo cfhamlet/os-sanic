@@ -54,18 +54,22 @@ class InfoCommand(Command):
             print('    Extensions:')
             for extension in extensions:
                 print('        {}: {}'.format(
-                    extension.config.name, extension.__class__))
-                print(left_align(Config.to_json(
-                    extension.config, indent=4), align=8))
+                    extension.name, extension.__class__))
+                if len(extension.config) > 0:
+                    print(left_align(Config.to_json(
+                        extension.config, indent=4), align=8))
 
-        view_manager = app.view_manager
-        patterns = view_manager.patterns
-        if patterns:
-            prefix = view_manager.blueprint.url_prefix if view_manager.blueprint.url_prefix else ''
+        views = app.view_manager.views
+        url_prefix = app.view_manager.blueprint.url_prefix
+        url_prefix = '' if not url_prefix else url_prefix
+        if views:
             print('    Views:')
-            for pattern in view_manager.patterns:
-                print('    {} {}'.format(prefix + pattern,
-                                         view_manager.get_view(pattern)))
+            for view in views:
+                print('        {} {}'.format(
+                    url_prefix + view.pattern, view.view_cls))
+                if len(view.config) > 0:
+                    print(left_align(Config.to_json(
+                        view.config, indent=4), align=8))
 
     def _apps_info(self, args):
         am = self._server.app_manager

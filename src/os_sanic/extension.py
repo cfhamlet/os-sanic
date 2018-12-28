@@ -1,38 +1,39 @@
-from inspect import isawaitable
 from collections import OrderedDict
 from functools import partial
+from inspect import isawaitable
 
 from os_config import Config
-from sanic.views import HTTPMethodView
 
-from os_sanic.log import getLogger, logger
+from os_sanic.log import getLogger 
 from os_sanic.utils import load_class
 from os_sanic.workflow import Workflowable
 
 
 class Extension(Workflowable):
 
-    def __init__(self, sanic, config):
-        self.sanic = sanic
+    def __init__(self, application, name, config):
+        self.name = name
+        self.application = application
         self.config = config
 
     @staticmethod
-    def create(sanic, app_cfg, ext_cfg, user_config):
+    def create(application, ext_cfg, user_config):
         ec = ext_cfg.extension_class
         config = Config.create()
         Config.update(config, ext_cfg)
-        if user_config is not None:
-            Config.update(config, user_config)
-        config.extension_class = ec
+        Config.update(config, user_config)
+        name = Config.pop(config, 'name')
+        Config.pop(config, 'extension_class')
         package = None
         if ec.startswith('.'):
-            package = app_cfg.package
+            package = application.app_cfg.package
         cls = load_class(ec, Extension, package=package)
-        return cls(sanic, config)
+        return cls(application, name, config)
 
 
 class ExtensionManager(Workflowable):
-    def __init__(self, app_manager):
+    def __init__(self, application):
+        self.application = application
         self._extensions = OrderedDict()
         self._logger = getLogger(self.__class__.__name__)
         [setattr(self, m, partial(self.__call, m))
@@ -56,7 +57,7 @@ class ExtensionManager(Workflowable):
                 self._logger.error(
                     'Extension error {}.{}, {}'.format(key, method, e))
 
-    def load_extension(self, app_cfg, ext_cfg, user_config):
+    def load_extension(self, ext_cfg, user_config):
 
         try:
             name = ext_cfg.name
@@ -65,7 +66,7 @@ class ExtensionManager(Workflowable):
                     'Extension already exists, {}'.format(name))
                 return
             extension = Extension.create(
-                self._sanic, app_cfg, ext_cfg, user_config)
+                self.application, ext_cfg, user_config)
             self._extensions[name] = extension
             self._logger.debug('Load extension, {} {}'.format(
                 name, extension.__class__))
@@ -73,19 +74,19 @@ class ExtensionManager(Workflowable):
             self._logger.error('Load extension fail {}, {}'.format(e, ext_cfg))
 
     @staticmethod
-    def create(app_manager):
+    def create(application):
 
-        em = ExtensionManager(app_manager)
+        em = ExtensionManager(application)
 
         user_configs = {}
-        for cfg in Config.get(app_manager.user_config, 'EXTENSIONS', []):
+        for cfg in Config.get(application.user_config, 'EXTENSIONS', []):
             name = Config.get(cfg, 'name')
             if name:
                 user_configs[name] = cfg
 
-        for ext_cfg in Config.get(app_manager.core_config, 'EXTENSIONS', []):
+        for ext_cfg in Config.get(application.core_config, 'EXTENSIONS', []):
             name = Config.get(ext_cfg, 'name')
             if name:
-                em.load_extension(ext_cfg, user_configs.get(name))
+                em.load_extension(ext_cfg, user_configs.get(name, Config.create()))
 
         return em
