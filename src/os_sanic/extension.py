@@ -32,8 +32,7 @@ class Extension(Workflowable):
 
 
 class ExtensionManager(Workflowable):
-    def __init__(self, sanic):
-        self._sanic = sanic
+    def __init__(self, app_manager):
         self._extensions = OrderedDict()
         self._logger = getLogger(self.__class__.__name__)
         [setattr(self, m, partial(self.__call, m))
@@ -41,6 +40,10 @@ class ExtensionManager(Workflowable):
 
     def get_extension(self, name):
         return self._extensions[name]
+
+    @property
+    def extensions(self):
+        return self._extensions.values()
 
     async def __call(self, method):
         for key, ext in self._extensions.items():
@@ -70,19 +73,19 @@ class ExtensionManager(Workflowable):
             self._logger.error('Load extension fail {}, {}'.format(e, ext_cfg))
 
     @staticmethod
-    def create(sanic, app_cfg, core_config, user_config):
+    def create(app_manager):
 
-        em = ExtensionManager(sanic)
+        em = ExtensionManager(app_manager)
 
         user_configs = {}
-        for cfg in Config.get(user_config, 'EXTENSIONS', []):
+        for cfg in Config.get(app_manager.user_config, 'EXTENSIONS', []):
             name = Config.get(cfg, 'name')
             if name:
                 user_configs[name] = cfg
 
-        for ext_cfg in Config.get(core_config, 'EXTENSIONS', []):
+        for ext_cfg in Config.get(app_manager.core_config, 'EXTENSIONS', []):
             name = Config.get(ext_cfg, 'name')
             if name:
-                em.load_extension(app_cfg, ext_cfg, user_configs.get(name))
+                em.load_extension(ext_cfg, user_configs.get(name))
 
         return em

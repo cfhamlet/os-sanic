@@ -42,6 +42,10 @@ class Server(Workflowable):
         async def run(app, loop):
             await self._app_manager.run()
 
+    @property
+    def app_manager(self):
+        return self._app_manager
+
     async def setup(self):
         await self._app_manager.setup()
 

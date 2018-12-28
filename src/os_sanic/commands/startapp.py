@@ -36,11 +36,19 @@ class StartAppCommand(Command):
 
         app_dst_dir = os.path.join(
             os.getcwd(), 'apps/{}'.format(args.app_name))
-        app_dst_dir = os.path.abspath(app_dst_dir)
 
         if os.path.exists(app_dst_dir):
             print('Error: already existed, {}'.format(app_dst_dir))
             sys.exit(1)
+
+        app_dir = os.path.join(os.getcwd(), 'apps')
+        if not os.path.exists(app_dir):
+            os.makedirs(app_dir)
+
+        apps_dst_dir = os.path.join(os.getcwd(), 'apps')
+        if not os.path.exists(apps_dst_dir):
+            apps_tpl_dir = os.path.join(base_tpl_dir, 'apps_template')
+            create_from_tpl(apps_tpl_dir, apps_dst_dir, ignores=['*.pyc', ])
 
         config = create_sanic_config()
         app_package = 'apps.{}'.format(args.app_name)
@@ -56,7 +64,7 @@ class StartAppCommand(Command):
         print('New os-sanic app: {}\n'.format(args.app_name))
         print('Use app template:')
         print('    {}\n'.format(app_tpl_dir))
-        print('Create in:')
+        print('Create app in:')
         print('    {}\n'.format(app_dst_dir))
-        print('You should add app package into INSTALLED_APPS')
-        print('    {}'.format(app_package))
+        print('You should add app package string into INSTALLED_APPS:')
+        print('    \'{}\''.format(app_package))

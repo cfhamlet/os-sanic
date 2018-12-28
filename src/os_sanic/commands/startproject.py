@@ -35,7 +35,6 @@ class StartProjectCommand(Command):
         proj_tpl_dir = os.path.join(base_tpl_dir, 'project_template')
 
         proj_dst_dir = os.path.join(os.getcwd(), args.project_name)
-        proj_dst_dir = os.path.abspath(proj_dst_dir)
 
         if os.path.exists(proj_dst_dir):
             print('Error: already existed, {}'.format(proj_dst_dir))
@@ -47,6 +46,10 @@ class StartProjectCommand(Command):
 
         create_from_tpl(proj_tpl_dir, proj_dst_dir,
                         ignores=['*.pyc', ], **config)
+
+        apps_tpl_dir = os.path.join(base_tpl_dir, 'apps_template')
+        apps_dst_dir = os.path.join(proj_dst_dir, 'apps')
+        create_from_tpl(apps_tpl_dir, apps_dst_dir, ignores=['*.pyc', ])
 
         app_tpl_dir = os.path.join(base_tpl_dir, 'app_template')
         app_dst_dir = os.path.join(
@@ -63,8 +66,10 @@ class StartProjectCommand(Command):
         print('    {}'.format(proj_tpl_dir))
         print('Use app template:')
         print('    {}\n'.format(app_tpl_dir))
-        print('Create in:')
-        print('    {}\n'.format(proj_dst_dir))
+        print('Create project in:')
+        print('    {}'.format(proj_dst_dir))
+        print('Create app in:')
+        print('    {}\n'.format(app_dst_dir))
         print('You can start your server with:')
         print('    cd {}'.format(proj_dst_dir))
         print('    python manager.py run')

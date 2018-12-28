@@ -16,17 +16,47 @@ class Application(Workflowable):
 
     def __init__(self, sanic, name, app_cfg, core_config, user_config):
         self._sanic = sanic
-        self.name = name
+        self._name = name
         self._app_cfg = app_cfg
+        self._core_config = core_config
+        self._user_config = user_config
+
         self._logger = getLogger('App.{}'.format(name))
-        
 
-        self._ext_manager = ExtensionManager.create(
-            sanic, app_cfg, core_config, user_config)
+        self._ext_manager = ExtensionManager.create(self)
 
-        ViewManager.load(sanic, name, app_cfg, core_config, user_config)
+        self._view_manager = ViewManager.create(self)
+
         [setattr(self, m, partial(self.__call, m))
          for m in ('run', 'setup', 'cleanup')]
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def app_cfg(self):
+        return self._app_cfg
+
+    @property
+    def user_config(self):
+        return self._user_config
+
+    @property
+    def core_config(self):
+        return self._core_config
+
+    @property
+    def extension_manager(self):
+        return self._ext_manager
+
+    @property
+    def view_manager(self):
+        return self._view_manager
+
+    @property
+    def package(self):
+        return self._app_cfg.package
 
     async def __call(self, method):
         try:
@@ -58,6 +88,10 @@ class ApplicationManager(Workflowable):
 
     def get_app(self, name):
         return self._apps[name]
+
+    @property
+    def apps(self):
+        return self._apps.values()
 
     def load_app(self, app_cfg):
         try:
