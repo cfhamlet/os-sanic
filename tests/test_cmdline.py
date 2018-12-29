@@ -47,7 +47,7 @@ def create_project(tmpdir, proj_name):
         call(runf, 'startproject {}'.format(proj_name), env)
 
 
-def test_info(tmpdir):
+def test_start_app(tmpdir):
     proj_name = 'xxx'
     create_project(tmpdir, proj_name)
     proj_path = os.path.join(tmpdir.strpath, proj_name)
@@ -57,4 +57,29 @@ def test_info(tmpdir):
     with cd(proj_path):
         print(proj_path)
         copy_file('manage_for_test.py', 'manage.py')
-        call('manage.py', 'info', env)
+        app_name = 'yyy'
+        call('manage.py', f'startapp {app_name}', env)
+    for ff in ('apps/yyy', 'apps/yyy/app.py'):
+        print(ff)
+        p = os.path.join(proj_path, ff)
+        assert os.path.exists(p)
+
+
+def test_info(tmpdir):
+    proj_name = 'xxx'
+    create_project(tmpdir, proj_name)
+    proj_path = os.path.join(tmpdir.strpath, proj_name)
+    env = os.environ.copy()
+    env['COVERAGE_PROCESS_START'] = os.path.abspath('.coveragerc')
+    env['COVERAGE_FILE'] = os.path.abspath('.coverage')
+    expect = [
+        f'"package": "apps.{proj_name}",',
+        f'{proj_name.capitalize()}: <class \'apps.{proj_name}.extension.{proj_name.capitalize()}\'>',
+        f'/ <class \'apps.{proj_name}.view.{proj_name.capitalize()}View\'>',
+    ]
+    with cd(proj_path):
+        print(proj_path)
+        copy_file('manage_for_test.py', 'manage.py')
+        stdout, _ = call('manage.py', 'info', env)
+        for exp in expect:
+            assert exp.encode() in stdout
