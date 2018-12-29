@@ -12,7 +12,8 @@ deploy:
   provider: pypi
   user: cfhamlet
   password:
-    secure: 
+    secure: RnUpU2xKbYUQ68QW+7UQazN7OoXLuMhImaw+8oR17gqqA0R2eROBKeMQ4bBOck8MqwZQmq+MPvLWTILGmolJGNT1+z4x4NIyNELdIGbeWH0rZr/Hs5ClNqflqoe0M9WK9tmhdkH8hzB8VXOvCiRuxEIjnbCRVp9w3S/kFuwjpuD2G6OFWADGNE4j8G8J4ixqU3uyhmR/1+pEtZVqGFzbkKp1RQJkMSSdK7YaKn2RLsp0v5tUTb5vzOFtRSPCrSTGfwkJlcEzH1INAKNA/z1wOSiCU294CfgeMDyLoR2cSALkdb0a+CWd+Mhr+BaRRUnNtdzcmXjrNhHcNf1/AgPxt5ngRs27oOdVxd6SzGe7yg49Kk8ukkMJx+jPWDNw1wtkeCCRS99U8GtX301yRrRXmFrHDqsD3eXmpvgfJPRwP1ypXxU1b66HdmVmqNrXBGFo5GN1x/pDxqEWhNq9HevnJuWqVyoceuIgG6oO6+W+B6ab5Q4LM8AJRUeECEtvBj4gjt8D4NO04PLYZT7psH6EwDvHaCxONqJMy6nHOhKMDSsjKKHysbdszt0e/0+GPq9qhgW0f6Qz7RoJlsTki/s+houPRfuA9txRqr+UYIhPO55Qai03MCkffX9yDFwrlVEhGkAfok3oMFBNuC/ShQ/T07L2hsulPbTmH6IgPRAWSQs=
   true:
     tags: true
     condition: ${TRAVIS_PYTHON_VERSION} == 3.6
+password:

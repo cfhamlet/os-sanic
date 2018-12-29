@@ -1,2 +1,0 @@
-class UsageError(Exception):
-    pass
