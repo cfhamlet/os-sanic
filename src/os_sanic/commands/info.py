@@ -12,7 +12,7 @@ from os_sanic.utils import left_align
 class InfoCommand(Command):
     name = 'info'
     scope = CommandScope.PROJECT
-    help = 'show server information'
+    help = 'show config information'
 
     def add_arguments(self, parser):
         super(InfoCommand, self).add_arguments(parser)

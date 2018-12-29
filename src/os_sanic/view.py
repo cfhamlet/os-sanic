@@ -17,7 +17,7 @@ class View(object):
     @staticmethod
     def create(application, blueprint, view_cfg, user_config):
 
-        pattern , view_class = view_cfg.pattern, view_cfg.view_class
+        pattern, view_class = view_cfg.pattern, view_cfg.view_class
         config = Config.create()
         Config.update(config, view_cfg)
         Config.update(config, user_config)
@@ -60,7 +60,6 @@ class ViewManager(object):
     def _load_view(self, view_cfg, configs):
 
         pattern = None
-        view_cls = None
         if isinstance(view_cfg, tuple):
             pattern, view_class = view_cfg
             view_cfg = Config.create(
@@ -73,10 +72,11 @@ class ViewManager(object):
                 'View already existed, {} {}'.format(pattern, view_class))
             return
 
-        self._views[pattern] = View.create(
+        view = View.create(
             self.application, self.blueprint, view_cfg, configs.get(pattern, Config.create()))
+        self._views[pattern] = view
         self._logger.debug('Load view, {} {}'.format(
-            self.blueprint.url_prefix+pattern if self.blueprint.url_prefix else pattern, view_cls))
+            self.blueprint.url_prefix+pattern if self.blueprint.url_prefix else pattern, view.view_cls))
 
     def load_view(self, view_cfg, configs):
         try:
