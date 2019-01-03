@@ -59,7 +59,9 @@ def test_start_app(tmpdir):
         copy_file('manage_for_test.py', 'manage.py')
         app_name = 'yyy'
         call('manage.py', f'startapp {app_name}', env)
-        for ff in ('apps/yyy', 'apps/yyy/app.py'):
+        prefix = f'apps/{app_name}/'
+        for ff in ('', 'app.py', 'extension.py', '__init__.py', 'view.py'):
+            ff = os.path.join(prefix, ff)
             assert os.path.exists(ff)
 
 
