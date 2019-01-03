@@ -4,7 +4,7 @@ from logging import _nameToLevel
 
 from os_sanic.commands import Command, CommandScope
 from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
-from os_sanic.sanic_server import Server
+from os_sanic.server import Server
 
 
 class RunCommand(Command):

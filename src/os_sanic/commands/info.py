@@ -4,7 +4,7 @@ import pprint
 from argparse import FileType
 
 from os_sanic.commands import Command, CommandScope
-from os_sanic.sanic_server import Server
+from os_sanic.server import Server
 from os_config import Config
 from os_sanic.utils import left_align
 
