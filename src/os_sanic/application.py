@@ -62,6 +62,23 @@ class ApplicationManager(Workflowable):
         self._logger = getLogger(self.__class__.__name__)
         self._root_app = None
 
+        [setattr(self, m, partial(self.__call, m))
+         for m in ('run', 'setup', 'cleanup')]
+
+    async def __call(self, method):
+        iter = self._apps.keys()
+        if method == 'cleanup':
+            iter = sorted(iter, reverse=True)
+
+        for key in iter:
+            app = self._apps[key]
+            try:
+                await getattr(app, method)()
+
+            except Exception as e:
+                self._logger.error(
+                    'Application error {}.{}, {}'.format(key, method, e))
+
     def get_app(self, name):
         return self._apps[name]
 
@@ -98,22 +115,10 @@ class ApplicationManager(Workflowable):
         except Exception as e:
             self._logger.error('Load app fail, {}, {}'.format(e, app_cfg))
 
-    async def run(self):
-        for app in self._apps.values():
-            await app.run()
+    @classmethod
+    def create(cls, sanic):
 
-    async def setup(self):
-        for app in self._apps.values():
-            await app.setup()
-
-    async def cleanup(self):
-        for app in reversed(self._apps.values()):
-            await app.cleanup()
-
-    @staticmethod
-    def create(sanic):
-
-        am = ApplicationManager(sanic)
+        am = cls(sanic)
         for app_cfg in Config.create(
                 apps=sanic.config.get('INSTALLED_APPS', [])).apps:
             am.load_app(app_cfg)

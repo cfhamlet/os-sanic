@@ -59,10 +59,8 @@ def test_start_app(tmpdir):
         copy_file('manage_for_test.py', 'manage.py')
         app_name = 'yyy'
         call('manage.py', f'startapp {app_name}', env)
-    for ff in ('apps/yyy', 'apps/yyy/app.py'):
-        print(ff)
-        p = os.path.join(proj_path, ff)
-        assert os.path.exists(p)
+        for ff in ('apps/yyy', 'apps/yyy/app.py'):
+            assert os.path.exists(ff)
 
 
 def test_info(tmpdir):

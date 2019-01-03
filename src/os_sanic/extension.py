@@ -4,7 +4,7 @@ from inspect import isawaitable
 
 from os_config import Config
 
-from os_sanic.log import getLogger 
+from os_sanic.log import getLogger
 from os_sanic.utils import load_class
 from os_sanic.workflow import Workflowable
 
@@ -47,7 +47,12 @@ class ExtensionManager(Workflowable):
         return self._extensions.values()
 
     async def __call(self, method):
-        for key, ext in self._extensions.items():
+        iter = self._extensions.keys()
+        if method == 'cleanup':
+            iter = sorted(iter, reverse=True)
+
+        for key in iter:
+            ext = self._extensions[key]
             try:
                 r = getattr(ext, method)()
                 if isawaitable(r):
@@ -73,10 +78,10 @@ class ExtensionManager(Workflowable):
         except Exception as e:
             self._logger.error('Load extension fail {}, {}'.format(e, ext_cfg))
 
-    @staticmethod
-    def create(application):
+    @classmethod
+    def create(cls, application):
 
-        em = ExtensionManager(application)
+        em = cls(application)
 
         user_configs = {}
         for cfg in Config.get(application.user_config, 'EXTENSIONS', []):
@@ -87,6 +92,7 @@ class ExtensionManager(Workflowable):
         for ext_cfg in Config.get(application.core_config, 'EXTENSIONS', []):
             name = Config.get(ext_cfg, 'name')
             if name:
-                em.load_extension(ext_cfg, user_configs.get(name, Config.create()))
+                em.load_extension(
+                    ext_cfg, user_configs.get(name, Config.create()))
 
         return em
