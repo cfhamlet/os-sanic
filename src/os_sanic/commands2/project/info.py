@@ -48,7 +48,9 @@ def app_info(app):
 
 
 @click.command()
-@click.option('-c', '--config', default='config.py', show_default=True, type=click.File(mode='r'))
+@click.option('-c', '--config', default='config.py',
+              show_default=True, type=click.File(mode='r'),
+              help='Config file')
 def cli(config):
     config_file = os.path.abspath(config.name)
     server = Server.create(
