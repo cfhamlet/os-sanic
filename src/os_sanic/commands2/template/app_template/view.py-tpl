@@ -1,0 +1,7 @@
+from sanic.views import HTTPMethodView
+from sanic.response import json
+
+class {{view_class}}(HTTPMethodView):
+    
+    def get(self, request):
+        return json({'view': '{{view_class}}'})

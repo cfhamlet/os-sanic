@@ -35,19 +35,19 @@ def valid_name(name):
         except ImportError:
             return False
     try:
-        ast.parse('{} = None'.format(name))
+        ast.parse(f'{name} = None')
     except:
-        raise ValueError('Not a valid name: {}'.format(name))
+        raise ValueError(f'Not a valid name, {name}')
 
     if name.startswith('_'):
-        raise ValueError('Not a valid name: {}'.format(name))
+        raise ValueError(f'Not a valid name, {name}')
     elif _module_exists(name):
-        raise ValueError('Module {} already existed'.format(name))
+        raise ValueError(f'Module already existed, {name}')
 
 
 def copy_tpl(src, dst, ignores=[]):
     if os.path.exists(dst):
-        raise IOError('Already existed {}'.format(dst))
+        raise IOError(f'Path already existed {dst}')
     ignore = ignore_patterns(*ignores)
     names = os.listdir(src)
     ignored_names = ignore(src, names)

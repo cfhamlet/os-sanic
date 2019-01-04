@@ -1,0 +1,19 @@
+# coding: utf-8
+
+DEBUG = {{DEBUG}}
+
+LOG_LEVEL = '{{LOG_LEVEL}}'
+
+ACCESS_LOG = {{ACCESS_LOG}}
+
+HOST = '{{HOST}}'
+
+PORT = {{PORT}}
+
+INSTALLED_APPS = [
+    {
+        'name': '{{app_name}}',
+        'package': '{{app_package}}',
+        'root': True,
+    },
+]
