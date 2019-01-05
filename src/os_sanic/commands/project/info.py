@@ -1,9 +1,11 @@
-import os
 import json
-from os_sanic.server import Server
+import os
+
 import click
-from os_sanic.utils import left_align
 from os_config import Config
+
+from os_sanic.server import Server
+from os_sanic.utils import left_align
 
 
 def server_info(server):
@@ -22,7 +24,7 @@ def apps_info(server):
 
 
 def app_info(app):
-    click.echo(f'    {app.name}: <package {app.package}>')
+    click.echo(f'    {app.name}: <package \'{app.package}\'>')
     extensions = app.extension_manager.extensions
 
     if extensions:

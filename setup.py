@@ -29,7 +29,7 @@ setup(
     python_requires='>=3.6',
     zip_safe=False,
     entry_points={
-        'console_scripts': ['os-sanic = os_sanic.commands2:execute']
+        'console_scripts': ['os-sanic = os_sanic.cmdline:execute']
     },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

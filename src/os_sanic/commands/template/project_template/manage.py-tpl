@@ -3,7 +3,7 @@ import sys
 
 if __name__ == "__main__":
     try:
-        from os_sanic.commands2 import execute
+        from os_sanic.cmdline import execute
     except ImportError:
         # The above import may fail for some other reason. Ensure that the
         # issue is really that os-sanic is missing to avoid masking other

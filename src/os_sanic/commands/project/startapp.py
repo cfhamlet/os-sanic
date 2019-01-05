@@ -1,8 +1,9 @@
 import os
-import os_sanic
+
 import click
-from os_sanic.commands2 import valid_name
-from os_sanic.commands import create_from_tpl
+
+import os_sanic
+from os_sanic.commands import create_from_tpl, valid_name
 from os_sanic.config import create_sanic_config
 
 
@@ -13,7 +14,7 @@ def cli(ctx, app_name):
     '''Create new application.'''
 
     base_tpl_dir = os.path.join(
-        os_sanic.__path__[0], 'commands2', 'template')
+        os_sanic.__path__[0], 'commands', 'template')
 
     app_dst_dir = os.path.join(os.getcwd(), f'apps/{app_name}')
 
@@ -30,7 +31,7 @@ def cli(ctx, app_name):
         create_from_tpl(apps_tpl_dir, apps_dst_dir, ignores=['*.pyc', ])
 
     config = create_sanic_config()
-    app_package = 'apps.{}'.format(app_name)
+    app_package = f'apps.{app_name}'
 
     app_tpl_dir = os.path.join(base_tpl_dir, 'app_template')
 
@@ -40,10 +41,10 @@ def cli(ctx, app_name):
     create_from_tpl(app_tpl_dir, app_dst_dir,
                     ignores=['*.pyc', ], **config)
 
-    print('New os-sanic app: {}\n'.format(app_name))
-    print('Use app template:')
-    print('    {}\n'.format(app_tpl_dir))
-    print('Create app in:')
-    print('    {}\n'.format(app_dst_dir))
-    print('You should add app package string into INSTALLED_APPS:')
-    print('    \'{}\''.format(app_package))
+    click.echo(f'New os-sanic app: {app_name}\n')
+    click.echo('Use app template:')
+    click.echo(f'    {app_tpl_dir}\n')
+    click.echo('Create app in:')
+    click.echo(f'    {app_dst_dir}\n')
+    click.echo('You should add app package string into INSTALLED_APPS:')
+    click.echo(f'    \'{app_package}\'')

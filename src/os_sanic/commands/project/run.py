@@ -1,8 +1,10 @@
-import click
 import os
-from os_sanic.server import Server
+
+import click
+
+from os_sanic.commands import valid_log_level
 from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
-from os_sanic.commands2 import valid_log_level
+from os_sanic.server import Server
 
 default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
 
