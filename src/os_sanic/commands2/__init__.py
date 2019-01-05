@@ -2,6 +2,7 @@ import click
 import ast
 from os_sanic.utils import walk_modules
 from importlib import import_module
+from logging import _nameToLevel
 
 
 def valid_name(ctx, param, value):
@@ -24,13 +25,22 @@ def valid_name(ctx, param, value):
     return value
 
 
+def valid_log_level(ctx, param, value):
+    v = value.upper()
+    if v not in _nameToLevel:
+        choices = ' '.join(_nameToLevel.keys())
+        raise click.BadParameter(
+            f'Invalid choice: {value}. (choose from {choices})')
+    return v
+
+
 class CommandFinder(click.MultiCommand):
     def list_commands(self, ctx):
         return list(self.__find_commnds(ctx.obj).keys())
 
     def __find_commnds(self, path):
         commands = {}
-        for cmd_module in walk_modules(path):
+        for cmd_module in walk_modules(path, skip_fail=False):
             if hasattr(cmd_module, 'cli'):
                 commands[cmd_module.__name__.split(
                     '.')[-1]] = cmd_module.cli
@@ -44,9 +54,7 @@ class CommandFinder(click.MultiCommand):
 
 def execute(scope='global'):
 
-    context_settings = dict(obj=f'os_sanic.commands2.{scope}')
-
-    @click.command(cls=CommandFinder, context_settings=context_settings)
+    @click.command(cls=CommandFinder, context_settings=dict(obj=f'os_sanic.commands2.{scope}'))
     @click.version_option(message='%(prog)s %(version)s')
     @click.pass_context
     def cli(ctx):

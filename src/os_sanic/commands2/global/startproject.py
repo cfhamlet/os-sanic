@@ -4,7 +4,7 @@ import sys
 import os
 from os_sanic.config import create_sanic_config
 
-from os_sanic.commands import Command, create_from_tpl
+from os_sanic.commands import create_from_tpl
 from os_sanic.commands2 import valid_name
 
 

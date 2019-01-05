@@ -106,8 +106,7 @@ class ApplicationManager(Workflowable):
                 self._logger.warn('App already exists, {}'.format(app_name))
                 return
 
-            self._logger.debug(
-                'Load app, {} {}'.format(app_name, app_cfg.package))
+            self._logger.debug(f'Load app, {app_name} <package {app_cfg.package}>')
             app = Application.create(self.sanic, app_name, app_cfg)
             if Config.get(app_cfg, 'root'):
                 self._root_app = app
