@@ -26,4 +26,4 @@ if __name__ == "__main__":
         coverage.process_startup()
     # =============================================
 
-    execute(sys.argv, 'project')
+    execute('project')

@@ -1,33 +1,12 @@
-import re
 import os
-from shutil import copy2, copystat, ignore_patterns
+import click
 import ast
 from importlib import import_module
-from enum import Enum
+from logging import _nameToLevel
 from jinja2 import Template
+from shutil import copy2, copystat, ignore_patterns
 
-CommandScope = Enum('CommandScoe', 'GLOBAL, PROJECT')
-
-
-class Command(object):
-
-    scope = CommandScope.GLOBAL
-    name = None
-    description = ''
-    usage = ''
-    help = ''
-
-    def add_arguments(self, parser):
-        pass
-
-    def process_arguments(self, args):
-        pass
-
-    def run(self, args):
-        pass
-
-
-def valid_name(name):
+def valid_name(ctx, param, value):
     def _module_exists(module_name):
         try:
             import_module(module_name)
@@ -35,19 +14,29 @@ def valid_name(name):
         except ImportError:
             return False
     try:
-        ast.parse('{} = None'.format(name))
+        ast.parse(f'{value} = None')
     except:
-        raise ValueError('Not a valid name: {}'.format(name))
+        raise click.BadParameter(f'Not a valid name, {value}')
 
-    if name.startswith('_'):
-        raise ValueError('Not a valid name: {}'.format(name))
-    elif _module_exists(name):
-        raise ValueError('Module {} already existed'.format(name))
+    if value.startswith('_'):
+        raise click.BadParameter(f'Not a valid name, {value}')
+    elif _module_exists(value):
+        raise click.BadParameter(f'Module already existed, {value}')
 
+    return value
+
+
+def valid_log_level(ctx, param, value):
+    v = value.upper()
+    if v not in _nameToLevel:
+        choices = ' '.join(_nameToLevel.keys())
+        raise click.BadParameter(
+            f'Invalid choice: {value}. (choose from {choices})')
+    return v
 
 def copy_tpl(src, dst, ignores=[]):
     if os.path.exists(dst):
-        raise IOError('Already existed {}'.format(dst))
+        raise IOError(f'Path already existed {dst}')
     ignore = ignore_patterns(*ignores)
     names = os.listdir(src)
     ignored_names = ignore(src, names)

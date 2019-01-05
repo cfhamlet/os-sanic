@@ -42,7 +42,6 @@ class Server(Workflowable):
         async def run(app, loop):
             await self.app_manager.run()
 
-
     async def setup(self):
         await self.app_manager.setup()
 
@@ -64,10 +63,10 @@ class Server(Workflowable):
     def run(self):
         self.sanic.run(**self._run_args())
 
-    @staticmethod
-    def create(name, config_file=None, env_prefix=SANIC_ENV_PREFIX,
+    @classmethod
+    def create(cls, name, config_file=None, env_prefix=SANIC_ENV_PREFIX,
                log_config=None, **kwargs):
         sanic_config = create_sanic_config(load_env=env_prefix)
         if config_file:
             sanic_config.from_pyfile(config_file)
-        return Server(name, sanic_config, log_config, **kwargs)
+        return cls(name, sanic_config, log_config, **kwargs)

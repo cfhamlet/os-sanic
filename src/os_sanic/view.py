@@ -84,9 +84,9 @@ class ViewManager(object):
         except Exception as e:
             self._logger.error('Load view error, {}'.format(e))
 
-    @staticmethod
-    def create(application):
-        view_manager = ViewManager(application)
+    @classmethod
+    def create(cls, application):
+        view_manager = cls(application)
 
         configs = {}
         for v in Config.get(application.user_config, 'VIEWS', []):
