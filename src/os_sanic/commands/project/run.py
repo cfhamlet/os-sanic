@@ -27,6 +27,7 @@ default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
               help='Log level.'
               )
 def cli(**kwargs):
+    '''Run server.'''
 
     config_file = os.path.abspath(kwargs.get('config').name)
     server = Server.create(

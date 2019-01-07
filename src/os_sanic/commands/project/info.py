@@ -54,6 +54,7 @@ def app_info(app):
               show_default=True, type=click.File(mode='r'),
               help='Config file')
 def cli(config):
+    '''Show config details.'''
     config_file = os.path.abspath(config.name)
     server = Server.create(
         'os-sanic',
