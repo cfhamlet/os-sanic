@@ -69,16 +69,17 @@ def test_info(tmpdir):
     proj_name = 'xxx'
     create_project(tmpdir, proj_name)
     proj_path = os.path.join(tmpdir.strpath, proj_name)
+    print(proj_path)
     env = os.environ.copy()
     env['COVERAGE_PROCESS_START'] = os.path.abspath('.coveragerc')
     env['COVERAGE_FILE'] = os.path.abspath('.coverage')
     expect = [
+        f'"name": "{proj_name}",',
         f'"package": "apps.{proj_name}",',
-        f'{proj_name.capitalize()}: <class \'apps.{proj_name}.extension.{proj_name.capitalize()}\'>',
-        f'/ <class \'apps.{proj_name}.view.{proj_name.capitalize()}View\'>',
+        f'<class \'apps.{proj_name}.extension.{proj_name.capitalize()}\'>',
+        f'<class \'apps.{proj_name}.view.{proj_name.capitalize()}View\'>',
     ]
     with cd(proj_path):
-        print(proj_path)
         copy_file('manage_for_test.py', 'manage.py')
         stdout, _ = call('manage.py', 'info', env)
         for exp in expect:
