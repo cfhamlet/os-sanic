@@ -6,9 +6,10 @@ from sanic.log import logger
 
 def getLogger(name):
     lg = logging.getLogger(name)
-    if logger.hasHandlers():
-        lg.addHandler(logger.handlers[0])
-    lg.setLevel(logger.level)
+    if not lg.hasHandlers():
+        if logger.hasHandlers():
+            lg.addHandler(logger.handlers[0])
+            lg.setLevel(logger.level)
     return lg
 
 
