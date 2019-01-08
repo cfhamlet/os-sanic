@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from tests.cmd_runner import call
 from tests.utils import cd, copy_file
 
