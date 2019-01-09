@@ -107,38 +107,36 @@ def test_info(new_project, cov_env):
 
 @pytest.fixture
 def run_server(xproc, new_project, cov_env):
-    port = unused_port()
+    name = 'sanic_server'
 
-    class Starter(ProcessStarter):
-        pattern = '.*Starting\\s+worker'
-        env = cov_env
-        args = [
-            'python',
-            'manage.py',
-            'run',
-            '--port', f'{port}',
-        ]
+    def _run_server(proj_path, *run_args):
 
-        def __init__(self, control_dir, process):
-            self.control_dir = control_dir
-            self.process = process
+        class Starter(ProcessStarter):
+            pattern = '.*Starting\\s+worker'
+            env = cov_env
+            args = [
+                'python',
+                'manage.py',
+                *run_args,
+            ]
 
-    proj_name = 'sanic_server'
-    proj_path = new_project(f'{proj_name}')
+            def __init__(self, control_dir, process):
+                self.control_dir = control_dir
+                self.process = process
 
-    copytree(proj_path, xproc.rootdir.join(proj_name))
+        copytree(proj_path, xproc.rootdir.join(name))
+        xproc.ensure(name, Starter)
 
-    xproc.ensure(proj_name, Starter)
-    yield port
+    yield _run_server
 
-    xproc.getinfo(proj_name).terminate()
+    xproc.getinfo(name).terminate()
 
 
 def test_run_001(new_project, run_server):
     proj_name = 'xxx'
     proj_path = new_project(proj_name)
     port = unused_port()
-    run_server(proj_path, f'run --port {port}')
-    # url = f'http://127.0.0.1:{port}/'
-    # r = requests.get(url)
-    # assert r.status_code == 200
+    run_server(proj_path, 'run', '--port', f'{port}')
+    url = f'http://127.0.0.1:{port}/'
+    r = requests.get(url)
+    assert r.status_code == 200
