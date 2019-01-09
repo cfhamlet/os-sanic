@@ -12,9 +12,10 @@ from os_sanic.workflow import Workflowable
 class Extension(Workflowable):
 
     def __init__(self, application, name, config):
-        self.name = name
         self.application = application
+        self.name = name
         self.config = config
+        self.logger = application.get_logger(name)
 
     @staticmethod
     def create(application, ext_cfg, user_config):
@@ -35,9 +36,9 @@ class ExtensionManager(Workflowable):
     def __init__(self, application):
         self.application = application
         self._extensions = OrderedDict()
-        self._logger = getLogger(self.__class__.__name__)
-        [setattr(self, m, partial(self.__call, m))
-         for m in ('run', 'setup', 'cleanup')]
+        self.logger = getLogger(self.__class__.__name__)
+        [setattr(self, method, partial(self.__call, method))
+         for method in ('run', 'setup', 'cleanup')]
 
     def get_extension(self, name):
         return self._extensions[name]
@@ -59,24 +60,21 @@ class ExtensionManager(Workflowable):
                     await r
 
             except Exception as e:
-                self._logger.error(
-                    'Extension error {}.{}, {}'.format(key, method, e))
+                self.logger.error(f'Extension error {key}.{method}, {e}')
 
     def load_extension(self, ext_cfg, user_config):
 
         try:
             name = ext_cfg.name
             if name in self._extensions:
-                self._logger.warn(
-                    'Extension already exists, {}'.format(name))
+                self.logger.warn(f'Extension already exists, {name}')
                 return
             extension = Extension.create(
                 self.application, ext_cfg, user_config)
             self._extensions[name] = extension
-            self._logger.debug('Load extension, {} {}'.format(
-                name, extension.__class__))
+            self.logger.debug(f'Load extension, {name} {extension.__class__}')
         except Exception as e:
-            self._logger.error('Load extension fail {}, {}'.format(e, ext_cfg))
+            self.logger.error(f'Load extension fail {e}, {ext_cfg}')
 
     @classmethod
     def create(cls, application):

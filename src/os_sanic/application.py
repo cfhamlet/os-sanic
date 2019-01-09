@@ -21,14 +21,17 @@ class Application(Workflowable):
         self.core_config = core_config
         self.user_config = user_config
 
-        self._logger = getLogger('App.{}'.format(name))
+        self.logger = getLogger('App.{}'.format(name))
 
         self.extension_manager = ExtensionManager.create(self)
 
         self.view_manager = ViewManager.create(self)
 
-        [setattr(self, m, partial(self.__call, m))
-         for m in ('run', 'setup', 'cleanup')]
+        [setattr(self, method, partial(self.__call, method))
+         for method in ('run', 'setup', 'cleanup')]
+
+    def get_logger(self, tag):
+        return getLogger(f'App.{self.name}.{tag}')
 
     @property
     def package(self):
@@ -38,8 +41,7 @@ class Application(Workflowable):
         try:
             await getattr(self.extension_manager, method)()
         except Exception as e:
-            self._logger.error(
-                'Method error {}, {}'.format(method, e))
+            self.logger.error(f'Method error {method}, {e}')
 
     @staticmethod
     def create(sanic, app_name, app_cfg):
@@ -58,12 +60,12 @@ class ApplicationManager(Workflowable):
 
     def __init__(self, sanic):
         self.sanic = sanic
+        self.logger = getLogger(self.__class__.__name__)
         self._apps = OrderedDict()
-        self._logger = getLogger(self.__class__.__name__)
         self._root_app = None
 
-        [setattr(self, m, partial(self.__call, m))
-         for m in ('run', 'setup', 'cleanup')]
+        [setattr(self, method, partial(self.__call, method))
+         for method in ('run', 'setup', 'cleanup')]
 
     async def __call(self, method):
         iter = self._apps.keys()
@@ -74,10 +76,8 @@ class ApplicationManager(Workflowable):
             app = self._apps[key]
             try:
                 await getattr(app, method)()
-
             except Exception as e:
-                self._logger.error(
-                    'Application error {}.{}, {}'.format(key, method, e))
+                self.logger.error(f'Application error {key}.{method}, {e}')
 
     def get_app(self, name):
         return self._apps[name]
@@ -91,28 +91,27 @@ class ApplicationManager(Workflowable):
             if isinstance(app_cfg, str):
                 app_cfg = Config.create(package=app_cfg)
             if not Config.get(app_cfg, 'package'):
-                self._logger.warn(
-                    'Load app skip, no package {}'.format(app_cfg))
+                self.logger.warn(f'Load app skip, no package {app_cfg}')
                 return
 
             if Config.get(app_cfg, 'root') and self._root_app:
-                self._logger.warn(
-                    'Root app exist: {}'.format(self._root_app.name))
+                self.logger.warn(f'Root app exist: {self._root_app.name}')
                 Config.pop(app_cfg, 'root')
 
             app_name = app_cfg.package.split('.')[-1]
             app_name = Config.get(app_cfg, 'name', app_name)
             if app_name in self._apps:
-                self._logger.warn('App already exists, {}'.format(app_name))
+                self.logger.warn(f'App already exists, {app_name}')
                 return
 
-            self._logger.debug(f'Load app, {app_name} <package {app_cfg.package}>')
+            self.logger.debug(
+                f'Load app, {app_name} <package \'{app_cfg.package}>\'')
             app = Application.create(self.sanic, app_name, app_cfg)
             if Config.get(app_cfg, 'root'):
                 self._root_app = app
             self._apps[app_name] = app
         except Exception as e:
-            self._logger.error('Load app fail, {}, {}'.format(e, app_cfg))
+            self.logger.error(f'Load app fail, {e}, {app_cfg}')
 
     @classmethod
     def create(cls, sanic):

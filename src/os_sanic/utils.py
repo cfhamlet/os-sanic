@@ -4,11 +4,6 @@ from importlib import import_module
 from pkgutil import iter_modules
 
 
-def left_align(line, align=4):
-    align_str = ' ' * align
-    return align_str + ('\n' + align_str).join(line.split('\n'))
-
-
 def walk_modules(module_path, skip_fail=True):
 
     mod = None

@@ -1,12 +1,14 @@
+from os_sanic.log import getLogger
 from os_sanic.extension import Extension
+
 
 class {{extension_class}}(Extension):
 
     def setup(self):
-        pass
+        self.logger.info("setup")
 
     def run(self):
-        pass
+        self.logger.info("run")
 
     def cleanup(self):
-        pass
+        self.logger.info("cleanup")
