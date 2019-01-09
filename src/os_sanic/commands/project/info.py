@@ -6,7 +6,6 @@ import click
 from os_config import Config
 
 from os_sanic.server import Server
-from os_sanic.utils import left_align
 
 
 def server_info(server):

@@ -1,13 +1,14 @@
+import json
 import os
-from shutil import copytree
 import uuid
+from shutil import copytree
 
 import pytest
 import requests
-from xprocess import ProcessStarter, XProcess
 from pytest_xprocess import getrootdir
+from xprocess import ProcessStarter, XProcess
 
-from tests.cmd_runner import call, process
+from tests.cmd_runner import call
 from tests.utils import cd, copy_file, unused_port
 
 
@@ -106,7 +107,7 @@ def test_info(new_project, cov_env):
 
 
 @pytest.fixture
-def run_server(xproc, new_project, cov_env):
+def run_server(xproc, cov_env):
     name = 'sanic_server'
 
     def _run_server(proj_path, *run_args):
@@ -126,6 +127,7 @@ def run_server(xproc, new_project, cov_env):
 
         copytree(proj_path, xproc.rootdir.join(name))
         xproc.ensure(name, Starter)
+        return xproc
 
     yield _run_server
 
@@ -140,3 +142,17 @@ def test_run_001(new_project, run_server):
     url = f'http://127.0.0.1:{port}/'
     r = requests.get(url)
     assert r.status_code == 200
+    d = json.loads(r.content)
+    assert d == {'view': 'XxxView'}
+
+
+def test_run_002(new_project, run_server):
+    proj_name = 'xxx'
+    proj_path = new_project(proj_name)
+    port = unused_port()
+    xproc = run_server(proj_path, 'run', '--port', f'{port}', '-l', 'DEBUG')
+    info = xproc.getinfo('sanic_server')
+    log = info.logpath.open().read()
+    expects = ['[App.xxx.Xxx] [INFO] run', '[App.xxx.Xxx] [INFO] setup']
+    for exp in expects:
+        assert exp in log
