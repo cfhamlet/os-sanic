@@ -7,7 +7,7 @@ import pytest
 from os_sanic.cmdline import execute
 
 
-def call(runable_file=None, cmdline='', env=None, **kwargs):
+def process(runable_file=None, cmdline='', env=None, **kwargs):
     if env is None:
         env = os.environ.copy()
     if env.get('COVERAGE', None) is not None:
@@ -24,6 +24,11 @@ def call(runable_file=None, cmdline='', env=None, **kwargs):
                             cwd=os.getcwd(),
                             env=env,
                             **kwargs)
+    return proc
+
+
+def call(runable_file=None, cmdline='', env=None, **kwargs):
+    proc = process(runable_file, cmdline, env, **kwargs)
     stdout, stderr = proc.communicate()
     return stdout, stderr
 
