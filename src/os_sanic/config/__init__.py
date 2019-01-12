@@ -5,8 +5,8 @@ from sanic.config import Config
 SANIC_ENV_PREFIX = 'OS_SANIC_'
 
 
-def create_sanic_config(defaults=None, load_env=True):
-    default = SanicConfig(defaults, False)
+def create_sanic_config(defaults=None, load_env=True, keep_alive=True):
+    default = SanicConfig(defaults, False, keep_alive=keep_alive)
     default_config_file = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), 'default_config.py')
     default.from_pyfile(default_config_file)

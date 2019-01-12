@@ -13,7 +13,7 @@ class CommandFinder(click.MultiCommand):
     def get_command(self, ctx, name):
         ctx.ensure_object(dict)
         commands = self.__find_commnds(**ctx.obj)
-        return commands[name]
+        return commands.get(name, None)
 
     def __find_commnds(self, **kwargs):
         command_packages = kwargs.get('command_packages', [])

@@ -5,6 +5,7 @@ import click
 
 import os_sanic
 from os_sanic.commands import create_from_tpl, valid_name
+from os_sanic.commands.project.startapp import app_creation_params, create_app
 from os_sanic.config import create_sanic_config
 
 
@@ -25,24 +26,18 @@ def cli(ctx, project_name):
         ctx.fail(f'Project already existed, {proj_dst_dir}')
 
     config = create_sanic_config()
+    config.project_name = project_name
+
+    app_package, app_tpl_dir, app_dst_dir = app_creation_params(
+        project_name, proj_dst_dir)
+
     config.app_name = project_name
-    config.app_package = f'apps.{project_name}'
+    config.app_package = app_package
 
     create_from_tpl(proj_tpl_dir, proj_dst_dir,
                     ignores=['*.pyc', ], **config)
 
-    apps_tpl_dir = os.path.join(base_tpl_dir, 'apps_template')
-    apps_dst_dir = os.path.join(proj_dst_dir, 'apps')
-    create_from_tpl(apps_tpl_dir, apps_dst_dir, ignores=['*.pyc', ])
-
-    app_tpl_dir = os.path.join(base_tpl_dir, 'app_template')
-    app_dst_dir = os.path.join(proj_dst_dir, f'apps/{project_name}')
-
-    config.extension_class = config.extension_name = project_name.capitalize()
-    config.pattern = '/'
-    config.view_class = config.extension_class + 'View'
-    create_from_tpl(app_tpl_dir, app_dst_dir,
-                    ignores=['*.pyc', ], **config)
+    create_app(ctx, project_name, app_package, app_tpl_dir, app_dst_dir)
 
     click.echo(f'New os-sanic project: {project_name}\n')
     click.echo('Use project template:')

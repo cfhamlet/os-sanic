@@ -1,4 +1,5 @@
 import os
+import inspect
 from collections import OrderedDict
 from functools import partial
 from importlib import import_module
@@ -63,7 +64,6 @@ class ApplicationManager(Workflowable):
         self.logger = getLogger(self.__class__.__name__)
         self._apps = OrderedDict()
         self._root_app = None
-
         [setattr(self, method, partial(self.__call, method))
          for method in ('run', 'setup', 'cleanup')]
 

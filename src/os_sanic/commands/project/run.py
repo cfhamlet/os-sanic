@@ -26,13 +26,19 @@ default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
               callback=valid_log_level,
               help='Log level.'
               )
-def cli(**kwargs):
+@click.pass_context
+def cli(ctx, **kwargs):
     '''Run server.'''
 
+    ctx.ensure_object(dict)
+
     config_file = os.path.abspath(kwargs.get('config').name)
+
     server = Server.create(
-        'os-sanic',
+        ctx.obj['app'],
         config_file=config_file,
+        log_config=ctx.obj.get('log_config', None),
         **dict([(k.upper(), v) for k, v in kwargs.items()]),
     )
+
     server.run()
