@@ -5,7 +5,7 @@ from sanic import Sanic
 from os_sanic.cmdline import execute
 
 
-def run(app=None, command_packages=None, log_config=None, **kwargs):
+def run(app=None, command_packages=None, **kwargs):
     if app is None:
         app = Sanic('os-sanic')
 

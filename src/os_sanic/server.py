@@ -1,4 +1,5 @@
 import inspect
+import logging
 import os
 from functools import partial
 
@@ -12,8 +13,12 @@ from os_sanic.utils import deep_update
 
 
 class Server(object):
-    def __init__(self, app_manager):
+    def __init__(self, app_manager, enable_workflow=True):
         self.app_manager = app_manager
+        if enable_workflow:
+            self.__register_workflow()
+
+    def __register_workflow(self):
         [self.sanic.register_listener(partial(self.__call, method), event)
          for method, event in zip(('run', 'setup', 'cleanup'),
                                   ('before_server_start',
@@ -25,7 +30,7 @@ class Server(object):
         return self.app_manager.sanic
 
     async def __call(self, method, app, loop):
-        getattr(self.app_manager, method)()
+        await getattr(self.app_manager, method)()
 
     def _run_args(self):
         argspec = inspect.getargspec(self.sanic.run)
@@ -43,10 +48,34 @@ class Server(object):
         self.sanic.run(**self._run_args())
 
     @classmethod
-    def create(cls, app='os-sanic', config=None, log_config=None, **kwargs):
+    def create(cls, app='os-sanic', config=None, env_prefix=SANIC_ENV_PREFIX, log_config=None):
 
         assert isinstance(app, (str, Sanic))
+
         if isinstance(app, str):
             app = Sanic(app)
+
+        conf = create_sanic_config(load_env=env_prefix)
+        if config:
+            conf.update(config)
+
+        app.config.update(conf)
+
+        if app.configure_logging:
+            if not log_config:
+                log_config = deep_update({}, LOGGING_CONFIG_DEFAULTS)
+                deep_update(log_config, LOGGING_CONFIG_PATCH)
+            logging.config.dictConfig(log_config)
+
+        if app.config.get('DEBUG', False):
+            if os.environ.get('SANIC_SERVER_RUNNING') != 'true':
+                return cls(ApplicationManager.create(app), False)
+
+            logger.setLevel('DEBUG')
+            logger.debug('Debug mode')
+        else:
+            logger.setLevel(app.config.LOG_LEVEL)
+
+        logger.debug(f'Config: {app.config}')
 
         return cls(ApplicationManager.create(app))

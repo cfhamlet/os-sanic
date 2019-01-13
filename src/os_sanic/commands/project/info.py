@@ -5,7 +5,7 @@ from collections import OrderedDict
 import click
 from os_config import Config
 
-from os_sanic.server import Server
+from os_sanic.commands.project.run import create_server
 
 
 def server_info(server):
@@ -65,13 +65,12 @@ def app_info(app):
 @click.option('-c', '--config', default='config.py',
               show_default=True, type=click.File(mode='r'),
               help='Config file')
-def cli(config):
+@click.pass_context
+def cli(ctx, config):
     '''Show config details.'''
-    config_file = os.path.abspath(config.name)
-    server = Server.create(
-        'os-sanic',
-        config_file=config_file,
-    )
 
+    ctx.ensure_object(dict)
+
+    server = create_server(ctx.obj['app'], config=config)
     server_info(server)
     apps_info(server)

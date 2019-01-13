@@ -3,10 +3,25 @@ import os
 import click
 
 from os_sanic.commands import valid_log_level
-from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
+from os_sanic.config import create_sanic_config
 from os_sanic.server import Server
 
-default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
+
+def create_server(app, **kwargs):
+    config_file = os.path.abspath(kwargs.pop('config').name)
+
+    config = create_sanic_config()
+    config.from_pyfile(config_file)
+    config.update(dict([(k.upper(), v) for k, v in kwargs.items()])),
+
+    server = Server.create(
+        app,
+        config=config,
+    )
+    return server
+
+
+default_config = create_sanic_config()
 
 
 @click.command()
@@ -32,13 +47,5 @@ def cli(ctx, **kwargs):
 
     ctx.ensure_object(dict)
 
-    config_file = os.path.abspath(kwargs.get('config').name)
-
-    server = Server.create(
-        ctx.obj['app'],
-        config_file=config_file,
-        log_config=ctx.obj.get('log_config', None),
-        **dict([(k.upper(), v) for k, v in kwargs.items()]),
-    )
-
+    server = create_server(ctx.obj['app'], **kwargs)
     server.run()

@@ -4,7 +4,9 @@ import subprocess
 import sys
 
 import pytest
-from os_sanic.cmdline import execute
+from sanic import Sanic
+
+from os_sanic.manage import main
 
 
 def process(runable_file=None, cmdline='', env=None, **kwargs):
@@ -38,4 +40,4 @@ if __name__ == "__main__":
     if os.getenv('COVERAGE_PROCESS_START'):
         import coverage
         coverage.process_startup()
-    execute()
+    main()
