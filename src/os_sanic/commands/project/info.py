@@ -10,7 +10,6 @@ from os_sanic.commands.project.run import create_server
 
 def server_info(server):
     click.echo('Server:')
-
     out = json.dumps(server.sanic.config, indent=4)
     click.echo(f'{out}\n')
 
@@ -52,7 +51,7 @@ def app_info(app):
         views_info = []
         for view in views:
             view_info = OrderedDict()
-            view_info['pattern'] = url_prefix+view.pattern
+            view_info['uri'] = url_prefix+view.uri
             view_info['view_class'] = str(view.view_cls)
             view_info.update(Config.to_dict(view.config))
             views_info.append(view_info)
@@ -62,15 +61,15 @@ def app_info(app):
 
 
 @click.command()
-@click.option('-c', '--config', default='config.py',
+@click.option('-c', '--config-file', default='config.py',
               show_default=True, type=click.File(mode='r'),
               help='Config file')
 @click.pass_context
-def cli(ctx, config):
+def cli(ctx, config_file):
     '''Show config details.'''
 
     ctx.ensure_object(dict)
 
-    server = create_server(ctx.obj['app'], config=config)
+    server = create_server(ctx.obj['app'], config_file=config_file)
     server_info(server)
     apps_info(server)

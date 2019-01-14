@@ -53,7 +53,7 @@ class Server(object):
         assert isinstance(app, (str, Sanic))
 
         if isinstance(app, str):
-            app = Sanic(app)
+            app = Sanic(app, load_env=env_prefix)
 
         conf = create_sanic_config(load_env=env_prefix)
         if config:

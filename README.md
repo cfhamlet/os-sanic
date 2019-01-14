@@ -9,19 +9,31 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
 
 
-# Install
+## Install
 
   ```
-  $ pip install os-sanic
+  pip install os-sanic
   ```
 
+## Usage
 
-# Unit Tests
+* Create project
+
+    ```
+    
+    ```
+
+    
+
+
+
+
+## Unit Tests
 
   ```
-  $ tox
+  tox
   ```
 
-# License
+## License
 
 MIT licensed.

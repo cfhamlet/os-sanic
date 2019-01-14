@@ -12,8 +12,7 @@ def run(app=None, command_packages=None, **kwargs):
     if command_packages is None:
         command_packages = ['os_sanic.commands.project', ]
 
-    execute(app=app, command_packages=command_packages,
-            log_config=None, **kwargs)
+    execute(app=app, command_packages=command_packages, **kwargs)
 
 
 def main():

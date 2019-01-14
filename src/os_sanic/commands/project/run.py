@@ -8,7 +8,8 @@ from os_sanic.server import Server
 
 
 def create_server(app, **kwargs):
-    config_file = os.path.abspath(kwargs.pop('config').name)
+    config_file = os.path.abspath(kwargs.get('config_file').name)
+    kwargs['config_file'] = config_file
 
     config = create_sanic_config()
     config.from_pyfile(config_file)
@@ -27,7 +28,7 @@ default_config = create_sanic_config()
 @click.command()
 @click.option('--access-log', is_flag=True, help='Enable access log.')
 @click.option('--debug', is_flag=True, help='Enable debug mode.')
-@click.option('-c', '--config',
+@click.option('-c', '--config-file',
               default='config.py', show_default=True,
               type=click.File(mode='r'), help='Config file.')
 @click.option('-h', '--host',

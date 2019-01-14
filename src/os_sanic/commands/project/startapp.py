@@ -34,7 +34,7 @@ def create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir):
 
     config = create_sanic_config()
     config.extension_class = config.extension_name = app_name.capitalize()
-    config.pattern = '/'
+    config.uri = '/'
     config.view_class = config.extension_class + 'View'
     create_from_tpl(app_tpl_dir, app_dst_dir,
                     ignores=['*.pyc', ], **config)

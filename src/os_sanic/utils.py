@@ -33,13 +33,6 @@ def expected_cls(module, cls, base_class, include_base_class=False):
     return False
 
 
-def iter_classes(module_path, base_class, include_base_class=False, skip_fail=True):
-    for module in walk_modules(module_path, skip_fail=skip_fail):
-        for obj in vars(module).values():
-            if expected_cls(module, obj, base_class, include_base_class):
-                yield obj
-
-
 def load_class(class_path, base_class, include_base_class=False, package=None):
     module_path, class_name = class_path.rsplit('.', 1)
     module = import_module(module_path, package=package)

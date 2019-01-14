@@ -4,7 +4,6 @@ from inspect import isawaitable
 
 from os_config import Config
 
-from os_sanic.log import getLogger
 from os_sanic.utils import load_class
 from os_sanic.workflow import Workflowable
 
@@ -36,7 +35,7 @@ class ExtensionManager(Workflowable):
     def __init__(self, application):
         self.application = application
         self._extensions = OrderedDict()
-        self.logger = getLogger(self.__class__.__name__)
+        self.logger = application.get_logger(self.__class__.__name__)
         [setattr(self, method, partial(self.__call, method))
          for method in ('run', 'setup', 'cleanup')]
 
@@ -92,5 +91,8 @@ class ExtensionManager(Workflowable):
             if name:
                 em.load_extension(
                     ext_cfg, user_configs.get(name, Config.create()))
+            else:
+                logger = application.get_logger(cls.__name__)
+                logger.warn(f'No name specified {ext_cfg}')
 
         return em
