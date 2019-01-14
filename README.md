@@ -136,7 +136,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
 * View Class
 
-    The view class is normal sanic [``HTTPMethodView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). If you define extra params in the ``VIEWS``, they will be attached to a config object and pass to the view's ``__init__()``
+    The view class is normal sanic [HTTPMethodView](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). If you define extra params in the ``VIEWS``, they will be attached to a config object and pass to the view's ``__init__()``
     
     ```
     from sanic.views import HTTPMethodView
@@ -155,9 +155,57 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     
     - ``name``: the extension name
     - ``config``: if you define extra params in the ``EXTENSIONS``, they will be attached to this config object
-    - ``application``: a project scope object for access all of the apps
+    - ``application``: a project scope object for accessing all of the apps
     - ``logger``, the built-in logger object
     
+    
+    The extension class has three usefull methods invoked by the framework, ``setup``, ``run``, ``cleanup``, they all can be normal method or async method
+    
+    - ``setup``: called before server start
+    - ``run``: called afeter server run
+    - ``cleanup``: called after server stop, if there are multi extensions configured in ``EXTENSIONS``, the cleanup methods execute order will from last extension to the first one
+    
+    
+* application object
+
+    The application object is a project scope object for accessing all of the apps. 
+    
+    - it is a member of extension instance:
+    
+        ```
+        from os_sanic.extension import Extension
+
+        class Example(Extension):
+
+            def setup(self):
+                self.application
+                ...
+        ```
+    
+    - it can be access from the sanic app instance
+    
+        ```
+        from sanic.views import HTTPMethodView
+
+        class ExampleView(HTTPMethodView):
+
+        def get(self, request):
+            request.app.application
+            ...
+        ```
+        
+    - you can get sanic app instance by:
+    
+        ```
+        application.sanic
+        ```
+        
+    - you can ge extension instance by:
+    
+        ```
+        application.get_extension('appname.extensionname')
+        ```
+
 
 ## Unit Tests
 
