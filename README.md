@@ -43,7 +43,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     
 * Create app
 
-    App is designed as reusable component. Each app may has some extensions for loading data, managing db connection and so forth. It also has [views](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html) for http requests. The definition of the app is configured in ``app.py``, You can check the ``example`` app for more details.
+    App is designed as reusable unit. Each app may has some extensions as pluggins for loading data, managing db connection. It also has [views](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html) for http requests. The definition of the app is in ``app.py``, You can check the ``example`` app for more details.
     
     
     ```
@@ -65,6 +65,67 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     ```
     
     This command will load ``config.py`` and start the server. Use ``--help`` to seed more command line options.
+
+
+## Config
+
+* Server config
+
+    The default config file is ``config.py``, parameters define here are used in server scope, can be accessed from the ``config`` member of ``Sanic`` instance, [more details](https://sanic.readthedocs.io/en/latest/sanic/config.html).
+    
+* Install apps
+
+    You can add app package string into ``INSTALLED_APPS`` in the ``config.py`` to make it work.
+    
+    ```
+    INSTALLED_APPS = ['apps.examples', ]
+    ```
+    
+    More verbose config can be written as following:
+    
+    ```
+    INSTALLED_APPS = [
+        {
+            'name': 'example',
+            'package': 'apps.example',
+            'root': True,
+        },
+    ]
+    ```
+    
+* App definition
+
+    App is defined in the ``app.py``. ``EXTENSIONS`` and ``VIEWS`` are the core components.
+    
+    ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding data, manage db connection and so forth. ``name`` and ``extension_class`` are necessary, other params will pass to extension instance's config.
+    
+    ```
+    EXTENSIONS = [
+        {
+            'name': 'Example',
+            'extension_class': '.extension.Example',
+            'key1', 'value1',
+        },
+    ]
+    ```
+    
+    ``VIEWS`` are used for http requests. The simple style:
+    
+    ````
+    VIEWS = [('/', '.view.ExampleView'), ]
+    ````
+    
+    More verbose style which can pass params:
+    
+    ```
+    VIEWS = [
+        {
+            'uri': '/',
+            'view_class': '.view.ExampleView',
+            'key1': 'value1',
+        }
+    ]
+    ```
 
 
 ## Unit Tests
