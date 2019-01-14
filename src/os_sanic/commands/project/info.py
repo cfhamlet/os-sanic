@@ -57,6 +57,20 @@ def app_info(app):
             views_info.append(view_info)
         if views_info:
             info['views'] = views_info
+
+    statics = app.view_manager.statics
+    if statics:
+        statics_info = []
+        for static in statics:
+            static_info = OrderedDict()
+            static_info['uri'] = static.uri
+            static_info['file_or_directory'] = static.file_or_directory
+            static_info.update(static.kwargs)
+            statics_info.append(static_info)
+
+        if statics_info:
+            info['statics'] = statics_info
+
     return info
 
 

@@ -50,6 +50,20 @@ class ViewManager(object):
     def views(self):
         return self._views.values()
 
+    @property
+    def statics(self):
+        return self.blueprint.statics
+
+    def load_static(self, static_config, user_config):
+        try:
+            s = Config.to_dict(static_config)
+            s.update(Config.to_dict(user_config))
+            self.blueprint.static(
+                s.pop('uri'), s.pop('file_or_directory'), **s)
+            self.logger.debug(f'Load static, {self.statics[-1]}')
+        except Exception as e:
+            self.logger.error(f'Load static error, {e}')
+
     def _load_view(self, view_cfg, user_config):
 
         if isinstance(view_cfg, tuple):
@@ -83,16 +97,27 @@ class ViewManager(object):
 
         view_manager = cls(application, blueprint)
 
-        configs = {}
+        view_configs = {}
         for v in Config.get(application.user_config, 'VIEWS', []):
             uri = Config.get(v, 'uri')
             if uri:
                 Config.pop(v, 'uri')
-                configs[uri] = v
+                view_configs[uri] = v
 
         for view_cfg in Config.get(application.core_config, 'VIEWS', []):
-            view_manager.load_view(view_cfg, configs.get(
+            view_manager.load_view(view_cfg, view_configs.get(
                 view_cfg.uri, Config.create()))
+
+        static_configs = {}
+        for v in Config.get(application.user_config, 'STATICS', []):
+            uri = Config.get(v, 'uri')
+            if uri:
+                Config.pop(v, 'uri')
+                static_configs[uri] = v
+        statics_config = Config.get(application.core_config, 'STATICS', [])
+        for static_config in statics_config:
+            view_manager.load_static(static_config, static_configs.get(
+                static_config.uri, Config.create()))
 
         application.sanic.blueprint(blueprint)
 
