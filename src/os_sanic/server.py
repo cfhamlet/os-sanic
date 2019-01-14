@@ -1,5 +1,7 @@
 import inspect
+import logging
 import os
+from functools import partial
 
 from sanic import Sanic
 from sanic.log import LOGGING_CONFIG_DEFAULTS
@@ -8,45 +10,27 @@ from os_sanic.application import ApplicationManager
 from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
 from os_sanic.log import LOGGING_CONFIG_PATCH, logger
 from os_sanic.utils import deep_update
-from os_sanic.workflow import Workflowable
 
 
-class Server(Workflowable):
-    def __init__(self, name, config, log_config=None, **kwargs):
-        if not log_config:
-            log_config = deep_update({}, LOGGING_CONFIG_DEFAULTS)
-            deep_update(log_config, LOGGING_CONFIG_PATCH)
+class Server(object):
+    def __init__(self, app_manager, enable_workflow=True):
+        self.app_manager = app_manager
+        if enable_workflow:
+            self.__register_workflow()
 
-        self.sanic = Sanic(name=name, log_config=log_config)
-        self.sanic.config = config
-        self.sanic.config.update(kwargs)
-        if self.sanic.config.get("DEBUG", False):
-            if os.environ.get('SANIC_SERVER_RUNNING') != 'true':
-                return
-            logger.setLevel('DEBUG')
-            logger.debug('Debug mode')
-        else:
-            logger.setLevel(self.sanic.config.LOG_LEVEL)
-        logger.debug('Config: {}'.format(self.sanic.config))
-        self.app_manager = ApplicationManager.create(self.sanic)
+    def __register_workflow(self):
+        [self.sanic.register_listener(partial(self.__call, method), event)
+         for method, event in zip(('run', 'setup', 'cleanup'),
+                                  ('before_server_start',
+                                   'after_server_start',
+                                   'after_server_stop'))]
 
-        @self.sanic.listener('before_server_start')
-        async def setup(app, loop):
-            await self.setup()
+    @property
+    def sanic(self):
+        return self.app_manager.sanic
 
-        @self.sanic.listener('after_server_stop')
-        async def cleanup(app, loop):
-            await self.cleanup()
-
-        @self.sanic.listener('after_server_start')
-        async def run(app, loop):
-            await self.app_manager.run()
-
-    async def setup(self):
-        await self.app_manager.setup()
-
-    async def cleanup(self):
-        await self.app_manager.cleanup()
+    async def __call(self, method, app, loop):
+        await getattr(self.app_manager, method)()
 
     def _run_args(self):
         argspec = inspect.getargspec(self.sanic.run)
@@ -64,9 +48,34 @@ class Server(Workflowable):
         self.sanic.run(**self._run_args())
 
     @classmethod
-    def create(cls, name, config_file=None, env_prefix=SANIC_ENV_PREFIX,
-               log_config=None, **kwargs):
-        sanic_config = create_sanic_config(load_env=env_prefix)
-        if config_file:
-            sanic_config.from_pyfile(config_file)
-        return cls(name, sanic_config, log_config, **kwargs)
+    def create(cls, app='os-sanic', config=None, env_prefix=SANIC_ENV_PREFIX, log_config=None):
+
+        assert isinstance(app, (str, Sanic))
+
+        if isinstance(app, str):
+            app = Sanic(app, load_env=env_prefix)
+
+        conf = create_sanic_config(load_env=env_prefix)
+        if config:
+            conf.update(config)
+
+        app.config.update(conf)
+
+        if app.configure_logging:
+            if not log_config:
+                log_config = deep_update({}, LOGGING_CONFIG_DEFAULTS)
+                deep_update(log_config, LOGGING_CONFIG_PATCH)
+            logging.config.dictConfig(log_config)
+
+        if app.config.get('DEBUG', False):
+            if os.environ.get('SANIC_SERVER_RUNNING') != 'true':
+                return cls(ApplicationManager.create(app), False)
+
+            logger.setLevel('DEBUG')
+            logger.debug('Debug mode')
+        else:
+            logger.setLevel(app.config.LOG_LEVEL)
+
+        logger.debug(f'Config: {app.config}')
+
+        return cls(ApplicationManager.create(app))

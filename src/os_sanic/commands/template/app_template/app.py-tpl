@@ -7,7 +7,7 @@ EXTENSIONS = [
 
 VIEWS = [
     {
-        'pattern': '{{pattern}}',
+        'uri': '{{uri}}',
         'view_class': '.view.{{view_class}}',
     },
 ]

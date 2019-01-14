@@ -3,16 +3,32 @@ import os
 import click
 
 from os_sanic.commands import valid_log_level
-from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
+from os_sanic.config import create_sanic_config
 from os_sanic.server import Server
 
-default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
+
+def create_server(app, **kwargs):
+    config_file = os.path.abspath(kwargs.get('config_file').name)
+    kwargs['config_file'] = config_file
+
+    config = create_sanic_config()
+    config.from_pyfile(config_file)
+    config.update(dict([(k.upper(), v) for k, v in kwargs.items()])),
+
+    server = Server.create(
+        app,
+        config=config,
+    )
+    return server
+
+
+default_config = create_sanic_config()
 
 
 @click.command()
 @click.option('--access-log', is_flag=True, help='Enable access log.')
 @click.option('--debug', is_flag=True, help='Enable debug mode.')
-@click.option('-c', '--config',
+@click.option('-c', '--config-file',
               default='config.py', show_default=True,
               type=click.File(mode='r'), help='Config file.')
 @click.option('-h', '--host',
@@ -26,13 +42,11 @@ default_config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
               callback=valid_log_level,
               help='Log level.'
               )
-def cli(**kwargs):
+@click.pass_context
+def cli(ctx, **kwargs):
     '''Run server.'''
 
-    config_file = os.path.abspath(kwargs.get('config').name)
-    server = Server.create(
-        'os-sanic',
-        config_file=config_file,
-        **dict([(k.upper(), v) for k, v in kwargs.items()]),
-    )
+    ctx.ensure_object(dict)
+
+    server = create_server(ctx.obj['app'], **kwargs)
     server.run()

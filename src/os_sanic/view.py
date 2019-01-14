@@ -4,24 +4,23 @@ from os_config import Config
 from sanic import Blueprint
 from sanic.views import HTTPMethodView
 
-from os_sanic.log import getLogger
 from os_sanic.utils import load_class
 
 
 class View(object):
-    def __init__(self, pattern, view_cls, config):
-        self.pattern = pattern
+    def __init__(self, uri, view_cls, config):
+        self.uri = uri
         self.view_cls = view_cls
         self.config = config
 
     @classmethod
     def create(cls, application, blueprint, view_cfg, user_config):
 
-        pattern, view_class = view_cfg.pattern, view_cfg.view_class
+        uri, view_class = view_cfg.uri, view_cfg.view_class
         config = Config.create()
         Config.update(config, view_cfg)
         Config.update(config, user_config)
-        Config.pop(config, 'pattern')
+        Config.pop(config, 'uri')
         Config.pop(config, 'view_class')
 
         package = None
@@ -34,9 +33,9 @@ class View(object):
         if len(config) > 0:
             kwargs['config'] = config
 
-        blueprint.add_route(view_cls.as_view(**kwargs), pattern)
+        blueprint.add_route(view_cls.as_view(**kwargs), uri)
 
-        return cls(pattern, view_cls, config)
+        return cls(uri, view_cls, config)
 
 
 class ViewManager(object):
@@ -45,35 +44,32 @@ class ViewManager(object):
         self.application = application
         self.blueprint = blueprint
         self._views = OrderedDict()
-        self.logger = getLogger(self.__class__.__name__)
+        self.logger = application.get_logger(self.__class__.__name__)
 
     @property
     def views(self):
         return self._views.values()
 
-    def _load_view(self, view_cfg, configs):
+    def _load_view(self, view_cfg, user_config):
 
-        pattern = None
         if isinstance(view_cfg, tuple):
-            pattern, view_class = view_cfg
-            view_cfg = Config.create(
-                pattern=view_cfg.pattern, view_class=view_cfg._view_class)
+            view_cfg = Config.create(uri=view_cfg[0], view_class=view_cfg[1])
 
-        pattern, view_class = view_cfg.pattern, view_cfg.view_class
+        uri, view_class = view_cfg.uri, view_cfg.view_class
 
-        if pattern in self._views:
-            self.logger.warn(f'View already existed, {pattern} {view_class}')
+        if uri in self._views:
+            self.logger.warn(f'View already existed, {uri} {view_class}')
             return
 
-        view = View.create(
-            self.application, self.blueprint, view_cfg, configs.get(pattern, Config.create()))
-        self._views[pattern] = view
-        pth = self.blueprint.url_prefix+pattern if self.blueprint.url_prefix else pattern
+        view = View.create(self.application, self.blueprint,
+                           view_cfg, user_config)
+        self._views[uri] = view
+        pth = self.blueprint.url_prefix+uri if self.blueprint.url_prefix else uri
         self.logger.debug(f'Load view, {pth} {view.view_cls}')
 
-    def load_view(self, view_cfg, configs):
+    def load_view(self, view_cfg, user_config):
         try:
-            self._load_view(view_cfg, configs)
+            self._load_view(view_cfg, user_config)
         except Exception as e:
             self.logger.error(f'Load view error, {e}')
 
@@ -89,13 +85,14 @@ class ViewManager(object):
 
         configs = {}
         for v in Config.get(application.user_config, 'VIEWS', []):
-            pattern = Config.get(v, 'pattern')
-            if pattern:
-                Config.pop(v, 'pattern')
-                configs[pattern] = v
+            uri = Config.get(v, 'uri')
+            if uri:
+                Config.pop(v, 'uri')
+                configs[uri] = v
 
         for view_cfg in Config.get(application.core_config, 'VIEWS', []):
-            view_manager.load_view(view_cfg, configs)
+            view_manager.load_view(view_cfg, configs.get(
+                view_cfg.uri, Config.create()))
 
         application.sanic.blueprint(blueprint)
 
