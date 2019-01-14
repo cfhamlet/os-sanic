@@ -132,6 +132,33 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     ```
 
 
+## APIs
+
+* View Class
+
+    The view class is normal sanic [``HTTPMethodView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). If you define extra params in the ``VIEWS``, they will be attached to a config object and pass to the view's ``__init__()``
+    
+    ```
+    from sanic.views import HTTPMethodView
+    
+    class ExampleView(HTTPMethodView):
+    
+        def __init__(self, config):
+            config.key1
+    ```
+
+* Extension Class
+
+    The extenion class must inherit from ``os_sanic.extension.Extension``.
+    
+    The base class's members are ``name``, ``config``, ``application``, ``logger``
+    
+    - ``name``: the extension name
+    - ``config``: if you define extra params in the ``EXTENSIONS``, they will be attached to this config object
+    - ``application``: a project scope object for access all of the apps
+    - ``logger``, the built-in logger object
+    
+
 ## Unit Tests
 
   ```
