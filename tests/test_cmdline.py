@@ -68,10 +68,10 @@ def test_startproject_001(new_project):
         'config.py',
         'apps',
         'apps/__init__.py',
-        f'apps/{proj_name}/__init__.py',
-        f'apps/{proj_name}/app.py',
-        f'apps/{proj_name}/view.py',
-        f'apps/{proj_name}/extension.py',
+        f'apps/example/__init__.py',
+        f'apps/example/app.py',
+        f'apps/example/view.py',
+        f'apps/example/extension.py',
     ]
     print(proj_path)
     for f in files:
@@ -95,10 +95,10 @@ def test_info(new_project, cov_env):
     proj_path = new_project(proj_name)
     print(proj_path)
     expect = [
-        f'"name": "{proj_name}",',
-        f'"package": "apps.{proj_name}",',
-        f'<class \'apps.{proj_name}.extension.{proj_name.capitalize()}\'>',
-        f'<class \'apps.{proj_name}.view.{proj_name.capitalize()}View\'>',
+        f'"name": "example",',
+        f'"package": "apps.example",',
+        f'<class \'apps.example.extension.Example\'>',
+        f'<class \'apps.example.view.ExampleView\'>',
     ]
     with cd(proj_path):
         stdout, _ = call('manage.py', 'info', cov_env)
@@ -143,7 +143,7 @@ def test_run_001(new_project, run_server):
     r = requests.get(url)
     assert r.status_code == 200
     d = json.loads(r.content)
-    assert d == {'view': 'XxxView'}
+    assert d == {'view': 'ExampleView'}
 
 
 def test_run_002(new_project, run_server):
@@ -153,6 +153,6 @@ def test_run_002(new_project, run_server):
     xproc = run_server(proj_path, 'run', '--port', f'{port}', '-l', 'DEBUG')
     info = xproc.getinfo('sanic_server')
     log = info.logpath.open().read()
-    expects = ['[App.xxx.Xxx] [INFO] run', '[App.xxx.Xxx] [INFO] setup']
+    expects = ['[App.example.Example] [INFO] run', '[App.example.Example] [INFO] setup']
     for exp in expects:
         assert exp in log

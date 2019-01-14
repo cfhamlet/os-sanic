@@ -28,16 +28,17 @@ def cli(ctx, project_name):
     config = create_sanic_config()
     config.project_name = project_name
 
+    app_name = 'example'
     app_package, app_tpl_dir, app_dst_dir = app_creation_params(
-        project_name, proj_dst_dir)
+        app_name, proj_dst_dir)
 
-    config.app_name = project_name
+    config.app_name = app_name
     config.app_package = app_package
 
     create_from_tpl(proj_tpl_dir, proj_dst_dir,
                     ignores=['*.pyc', ], **config)
 
-    create_app(ctx, project_name, app_package, app_tpl_dir, app_dst_dir)
+    create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir)
 
     click.echo(f'New os-sanic project: {project_name}\n')
     click.echo('Use project template:')
