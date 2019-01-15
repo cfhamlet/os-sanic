@@ -13,15 +13,23 @@ from os_sanic.view import ViewManager
 from os_sanic.workflow import Workflowable
 
 
+class Context(dict):
+    def __setattr__(self, attr, value):
+        self[attr] = value
+
+    def __getattr__(self, attr):
+        try:
+            return self[attr]
+        except KeyError as ke:
+            raise AttributeError(f"No '{ke.args[0]}'")
+
+
 class Application(Workflowable):
 
-    def __init__(self, sanic, app_cfg, core_config, user_config):
-        self.sanic = sanic
-        self.app_cfg = app_cfg
-        self.core_config = core_config
-        self.user_config = user_config
+    def __init__(self, context):
+        self.context = context
 
-        self.logger = getLogger(f'App.{app_cfg.name}')
+        self.logger = getLogger(f'App.{context.app_cfg.name}')
 
         self.extension_manager = ExtensionManager.create(self)
 
@@ -31,15 +39,29 @@ class Application(Workflowable):
          for method in ('run', 'setup', 'cleanup')]
 
     @property
+    def sanic(self):
+        return self.context.application_manager.sanic
+
+    def get_extension(self, extension_path):
+        if '.' not in extension_path:
+            extension_path = '.'.join((self.name, extension_path))
+
+        return self.context.application_manager.get_extension(extension_path)
+
+    def __getattr__(self, attr):
+        try:
+            if attr in self.context:
+                return self.context[attr]
+            return self[attr]
+        except KeyError as ke:
+            raise AttributeError("No '{}'".format(ke.args[0]))
+
+    @property
     def name(self):
-        return self.app_cfg.name
+        return self.context.app_cfg.name
 
     def get_logger(self, tag):
         return getLogger(f'App.{self.name}.{tag}')
-
-    @property
-    def package(self):
-        return self.app_cfg.package
 
     async def __call(self, method):
         try:
@@ -48,16 +70,26 @@ class Application(Workflowable):
             self.logger.error(f'Method error {method}, {e}')
 
     @staticmethod
-    def create(sanic, app_cfg):
+    def create(application_manager, app_cfg):
 
         app_module = import_module('.'.join((app_cfg.package, 'app')))
+        runtime_path = os.path.dirname(app_module.__file__)
+
         core_config = Config.from_object(app_module)
         user_config = Config.create()
         if Config.get(app_cfg, 'config'):
             f = os.path.join(os.getcwd(), app_cfg.config)
             user_config = Config.from_pyfile(f)
+            runtime_path = os.path.dirname(f)
 
-        return Application(sanic, app_cfg, core_config, user_config)
+        context = Context()
+        context.application_manager = application_manager
+        context.runtime_path = runtime_path
+        context.app_cfg = app_cfg
+        context.core_config = core_config
+        context.user_config = user_config
+
+        return Application(context)
 
 
 class ApplicationManager(Workflowable):
@@ -82,13 +114,13 @@ class ApplicationManager(Workflowable):
             except Exception as e:
                 self.logger.error(f'Application error {key}.{method}, {e}')
 
+    def get_app(self, name):
+        return self._apps[name]
+
     def get_extension(self, extension_path):
         app_name, extension_name = extension_path.split('.')
         app = self.get_app(app_name)
         return app.extension_manager.get_extension(extension_name)
-
-    def get_app(self, name):
-        return self._apps[name]
 
     @property
     def apps(self):
@@ -115,7 +147,7 @@ class ApplicationManager(Workflowable):
 
             self.logger.debug(
                 f'Load app, {app_name} <package \'{app_cfg.package}>\'')
-            app = Application.create(self.sanic, app_cfg)
+            app = Application.create(self, app_cfg)
             if Config.get(app_cfg, 'root'):
                 self._root_app = app
             self._apps[app_name] = app
@@ -132,5 +164,4 @@ class ApplicationManager(Workflowable):
         for app_cfg in Config.create(
                 apps=sanic.config.get('INSTALLED_APPS', [])).apps:
             am.load_app(app_cfg)
-        sanic.application = am
         return am

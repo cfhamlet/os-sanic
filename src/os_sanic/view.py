@@ -1,3 +1,4 @@
+import os
 from collections import OrderedDict
 
 from os_config import Config
@@ -29,6 +30,8 @@ class View(object):
         view_cls = load_class(
             view_class, HTTPMethodView, package=package)
 
+        view_cls.application = application
+
         kwargs = {}
         if len(config) > 0:
             kwargs['config'] = config
@@ -58,8 +61,8 @@ class ViewManager(object):
         try:
             s = Config.to_dict(static_config)
             s.update(Config.to_dict(user_config))
-            self.blueprint.static(
-                s.pop('uri'), s.pop('file_or_directory'), **s)
+            self.blueprint.static(s.pop('uri'), os.path.abspath(os.path.join(
+                self.application.runtime_path, s.pop('file_or_directory'))), **s)
             self.logger.debug(f'Load static, {self.statics[-1]}')
         except Exception as e:
             self.logger.error(f'Load static error, {e}')

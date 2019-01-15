@@ -11,3 +11,10 @@ VIEWS = [
         'view_class': '.view.{{view_class}}',
     },
 ]
+
+STATICS = [
+    {
+        'uri': '/static',
+        'file_or_directory': '.',
+    },
+]
