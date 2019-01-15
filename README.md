@@ -25,7 +25,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     os-sanic startproject project --with-app example
     ```
     
-    This command will create a new project(with an example app) in current directory with the following structure:
+    This command will create a new project with an example app in current directory with the following structure:
     
     ```
     project/
