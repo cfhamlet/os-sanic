@@ -8,11 +8,15 @@ from os_sanic.server import Server
 
 
 def create_server(app, **kwargs):
-    config_file = os.path.abspath(kwargs.get('config_file').name)
-    kwargs['config_file'] = config_file
+    config_file = kwargs.get('config_file', None)
+    if config_file and not isinstance(config_file, str):
+        config_file = config_file.name
 
     config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
-    config.from_pyfile(config_file)
+    if config_file:
+        config_file = os.path.abspath(config_file)
+        kwargs['config_file'] = config_file
+        config.from_pyfile(config_file)
     config.update(dict([(k.upper(), v) for k, v in kwargs.items()])),
 
     server = Server.create(
