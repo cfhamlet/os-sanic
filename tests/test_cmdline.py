@@ -31,8 +31,8 @@ def cov_env():
 
 @pytest.fixture
 def new_project(tmpdir):
-    def _create_project(proj_name):
-        create_project(tmpdir, proj_name)
+    def _create_project(proj_name, app_name=None):
+        create_project(tmpdir, proj_name, app_name)
         proj_path = os.path.join(tmpdir.strpath, proj_name)
         with cd(proj_path):
             copy_file('manage_for_test.py', 'manage.py')
@@ -41,7 +41,7 @@ def new_project(tmpdir):
     yield _create_project
 
 
-def create_project(tmpdir, proj_name):
+def create_project(tmpdir, proj_name, app_name=None):
     f = 'cmd_runner.py'
     runf = os.path.join(tmpdir.strpath, f)
     copy_file(f, runf)
@@ -49,8 +49,12 @@ def create_project(tmpdir, proj_name):
     env['COVERAGE_PROCESS_START'] = os.path.abspath('.coveragerc')
     env['COVERAGE_FILE'] = os.path.abspath('.coverage')
 
+    cmd = f'startproject {proj_name}'
+    if app_name:
+        cmd += f' --with-app {app_name}'
+
     with cd(tmpdir):
-        call(runf, 'startproject {}'.format(proj_name), env)
+        call(runf, cmd, env)
 
 
 def test_no_args(tmpdir):
@@ -61,17 +65,18 @@ def test_no_args(tmpdir):
 
 def test_startproject_001(new_project):
     proj_name = 'xxx'
-    proj_path = new_project(proj_name)
+    app_name = 'example'
+    proj_path = new_project(proj_name, app_name)
 
     files = [
         'manage.py',
         'config.py',
         'apps',
         'apps/__init__.py',
-        f'apps/example/__init__.py',
-        f'apps/example/app.py',
-        f'apps/example/view.py',
-        f'apps/example/extension.py',
+        f'apps/{app_name}/__init__.py',
+        f'apps/{app_name}/app.py',
+        f'apps/{app_name}/view.py',
+        f'apps/{app_name}/extension.py',
     ]
     print(proj_path)
     for f in files:
@@ -92,13 +97,14 @@ def test_start_app(new_project, cov_env):
 
 def test_info(new_project, cov_env):
     proj_name = 'xxx'
-    proj_path = new_project(proj_name)
+    app_name = 'example'
+    proj_path = new_project(proj_name, app_name)
     print(proj_path)
     expect = [
-        f'"name": "example",',
-        f'"package": "apps.example",',
-        f'<class \'apps.example.extension.Example\'>',
-        f'<class \'apps.example.view.ExampleView\'>',
+        f'"name": "{app_name}",',
+        f'"package": "apps.{app_name}",',
+        f'<class \'apps.{app_name}.extension.{app_name.capitalize()}\'>',
+        f'<class \'apps.{app_name}.view.{app_name.capitalize()}View\'>',
     ]
     with cd(proj_path):
         stdout, _ = call('manage.py', 'info', cov_env)
@@ -136,7 +142,8 @@ def run_server(xproc, cov_env):
 
 def test_run_001(new_project, run_server):
     proj_name = 'xxx'
-    proj_path = new_project(proj_name)
+    app_name = 'example'
+    proj_path = new_project(proj_name, app_name)
     port = unused_port()
     run_server(proj_path, 'run', '--port', f'{port}')
     url = f'http://127.0.0.1:{port}/'
@@ -148,11 +155,13 @@ def test_run_001(new_project, run_server):
 
 def test_run_002(new_project, run_server):
     proj_name = 'xxx'
-    proj_path = new_project(proj_name)
+    app_name = 'example'
+    proj_path = new_project(proj_name, app_name)
     port = unused_port()
     xproc = run_server(proj_path, 'run', '--port', f'{port}', '-l', 'DEBUG')
     info = xproc.getinfo('sanic_server')
     log = info.logpath.open().read()
-    expects = ['[App.example.Example] [INFO] run', '[App.example.Example] [INFO] setup']
+    expects = ['[App.example.Example] [INFO] run',
+               '[App.example.Example] [INFO] setup']
     for exp in expects:
         assert exp in log
