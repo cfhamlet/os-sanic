@@ -29,7 +29,7 @@ class Application(Workflowable):
     def __init__(self, context):
         self.context = context
 
-        self.logger = getLogger(f'App.{context.app_cfg.name}')
+        self.logger = getLogger(f'App.{self.name}')
 
         self.extension_manager = ExtensionManager.create(self)
 

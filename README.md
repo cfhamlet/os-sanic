@@ -22,7 +22,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     Typically, a project contains management script, config file and a set of reusable apps. 
 
     ```
-    os-sanic startproject project
+    os-sanic startproject project --with-app example
     ```
     
     This command will create a new project(with an example app) in current directory with the following structure:

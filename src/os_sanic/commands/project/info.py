@@ -21,9 +21,10 @@ def apps_info(server):
         info = app_info(app)
         apps_info.append(info)
 
-    out = json.dumps(apps_info, indent=4)
-    click.echo('Applications:')
-    click.echo(out)
+    if apps_info:
+        out = json.dumps(apps_info, indent=4)
+        click.echo('Applications:')
+        click.echo(out)
 
 
 def app_info(app):
