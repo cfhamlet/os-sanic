@@ -10,6 +10,7 @@ from os_sanic.application import ApplicationManager
 from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
 from os_sanic.log import LOGGING_CONFIG_PATCH, logger
 from os_sanic.utils import deep_update
+from os_sanic.monkey_patch import patch
 
 
 class Server(object):
@@ -45,7 +46,8 @@ class Server(object):
         return run_args
 
     def run(self):
-        self.sanic.run(**self._run_args())
+        with patch():
+            self.sanic.run(**self._run_args())
 
     @classmethod
     def create(cls, app='os-sanic', config=None, env_prefix=SANIC_ENV_PREFIX, log_config=None):
