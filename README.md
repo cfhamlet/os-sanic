@@ -89,7 +89,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
             'name': 'example',
             'package': 'apps.example',
             'root': True,
-        },
+        }
     ]
     ```
     - ``name``: the app name, if not set will use ``package``'s last fragment
@@ -109,7 +109,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
                 'name': 'Example',
                 'extension_class': '.extension.Example',
                 'key1', 'value1',
-            },
+            }
         ]
         ```
     

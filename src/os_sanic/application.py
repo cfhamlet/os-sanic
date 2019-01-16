@@ -40,13 +40,13 @@ class Application(Workflowable):
 
     @property
     def sanic(self):
-        return self.context.application_manager.sanic
+        return self.application_manager.sanic
 
     def get_extension(self, extension_path):
         if '.' not in extension_path:
             extension_path = '.'.join((self.name, extension_path))
 
-        return self.context.application_manager.get_extension(extension_path)
+        return self.application_manager.get_extension(extension_path)
 
     def __getattr__(self, attr):
         try:

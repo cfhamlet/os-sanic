@@ -1,6 +1,5 @@
 import json
 
-
 def test_001(os_sanic_server):
     server = os_sanic_server(
         'test', None, 'tests.apps.case01')
