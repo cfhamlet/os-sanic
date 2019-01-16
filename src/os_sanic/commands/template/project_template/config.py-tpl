@@ -11,9 +11,11 @@ HOST = '{{HOST}}'
 PORT = {{PORT}}
 
 INSTALLED_APPS = [
+    {% if with_example %}
     {
         'name': '{{app_name}}',
         'package': '{{app_package}}',
         'root': True,
     },
+    {% endif %}
 ]

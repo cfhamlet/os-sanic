@@ -22,10 +22,10 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     Typically, a project contains management script, config file and a set of reusable apps. 
 
     ```
-    os-sanic startproject project
+    os-sanic startproject project --with-app example
     ```
     
-    This command will create a new project(with an example app) in current directory with the following structure:
+    This command will create a new project with an example app in current directory with the following structure:
     
     ```
     project/
@@ -99,37 +99,50 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     
 * App definition
 
-    App is defined in the ``app.py``. ``EXTENSIONS`` and ``VIEWS`` are the core components.
+    App is defined in the ``app.py``. ``EXTENSIONS``, ``VIEWS`` and ``STATICS`` are the core components.
     
-    ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding data, manage db connection and so forth. ``name`` and ``extension_class`` are necessary, other params will pass to extension instance's config.
+    - ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding data, manage db connection and so forth. ``name`` and ``extension_class`` are necessary, other params will pass to extension instance's config.
     
-    ```
-    EXTENSIONS = [
-        {
-            'name': 'Example',
-            'extension_class': '.extension.Example',
-            'key1', 'value1',
-        },
-    ]
-    ```
+        ```
+        EXTENSIONS = [
+            {
+                'name': 'Example',
+                'extension_class': '.extension.Example',
+                'key1', 'value1',
+            },
+        ]
+        ```
     
-    ``VIEWS`` are used for http requests. The simple style:
+    - ``VIEWS`` are used for http requests. The simple style:
+
     
-    ````
-    VIEWS = [('/', '.view.ExampleView'), ]
-    ````
+        ````
+        VIEWS = [('/', '.view.ExampleView'), ]
+        ````
     
-    More verbose style which can pass params:
+        More verbose style which can pass params:
     
-    ```
-    VIEWS = [
-        {
-            'uri': '/',
-            'view_class': '.view.ExampleView',
-            'key1': 'value1',
-        }
-    ]
-    ```
+
+        ```
+        VIEWS = [
+            {
+                'uri': '/',
+                'view_class': '.view.ExampleView',
+                'key1': 'value1',
+            }
+        ]
+        ```
+
+    - ``STATICS`` are used for serving static files, [see](https://sanic.readthedocs.io/en/latest/sanic/static_files.html). ``file_or_directory`` can be absolute or relative path base on the appliction runtime config path.
+
+        ```
+        STATICS = [
+            {
+                'uri': '/static',
+                'file_or_directory': '.'
+            }
+        ]
+        ```
 
 
 ## APIs
@@ -168,7 +181,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     
 * application object
 
-    The application object is a project scope object for accessing all of the apps. 
+    The application object represent the each individual app
     
     - it is a member of extension instance:
     
@@ -182,7 +195,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
                 ...
         ```
     
-    - it can be access from the sanic app instance
+    - it can be access in the view class
     
         ```
         from sanic.views import HTTPMethodView
@@ -190,20 +203,32 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
         class ExampleView(HTTPMethodView):
 
         def get(self, request):
-            request.app.application
+            self.application
             ...
         ```
         
-    - you can get sanic app instance by:
+    - you can get extension instance by:
     
+        ```
+        application.get_extension('extension_name')
+        ```
+
+        or get other app's extension
+
+        ```
+        application.get_extension('app_name.extension_name')
+        ```
+
+    - get app relative logger
+  
+        ```
+        application.get_logger('logger_name')
+        ```
+
+    - get sanic instance(it is the same object ``request.app`` in the view)
+        
         ```
         application.sanic
-        ```
-        
-    - you can ge extension instance by:
-    
-        ```
-        application.get_extension('appname.extensionname')
         ```
 
 

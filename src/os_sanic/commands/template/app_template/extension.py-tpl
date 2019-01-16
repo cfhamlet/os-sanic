@@ -1,4 +1,3 @@
-from os_sanic.log import getLogger
 from os_sanic.extension import Extension
 
 

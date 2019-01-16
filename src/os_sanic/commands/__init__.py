@@ -9,6 +9,8 @@ from jinja2 import Template
 
 
 def valid_name(ctx, param, value):
+    if value is None:
+        return None
     def _module_exists(module_name):
         try:
             import_module(module_name)
