@@ -5,7 +5,7 @@ from os_config import Config
 from sanic import Blueprint
 from sanic.views import HTTPMethodView
 
-from os_sanic.utils import load_class
+from os_sanic.utils import load_class, normalize_slash
 
 
 class View(object):
@@ -57,19 +57,37 @@ class ViewManager(object):
     def statics(self):
         return self.blueprint.statics
 
-    def load_static(self, static_config, user_config):
+    def load_static(self, static_cfg, user_config):
         try:
-            s = Config.to_dict(static_config)
+            s = Config.to_dict(static_cfg)
             s.update(Config.to_dict(user_config))
-            self.blueprint.static(s.pop('uri'), os.path.abspath(os.path.join(
+            uri = s.pop('uri')
+
+            real_uri = self._real_uri(uri)
+
+            self.blueprint.static(real_uri, os.path.abspath(os.path.join(
                 self.application.runtime_path, s.pop('file_or_directory'))), **s)
             static = self.statics[-1]
-            pth = self.blueprint.url_prefix + \
-                static.uri if self.blueprint.url_prefix else static.uri
+            pth = self.blueprint.url_prefix + static.uri
             self.logger.debug(
                 f'Load static, {pth} {self.statics[-1]}')
         except Exception as e:
             self.logger.error(f'Load static error, {e}')
+
+    def _real_uri(self, uri):
+        real_uri = normalize_slash(uri, with_prefix_slash=False)
+        url_prefix = self.blueprint.url_prefix
+
+        warn = True if uri != real_uri else False
+        if not url_prefix.endswith('/') and not real_uri.startswith('/'):
+            warn = True
+        elif url_prefix.endswith('/') and real_uri.startswith('/'):
+            warn = True
+            real_uri = real_uri[1:]
+        if warn:
+            self.logger.warn(
+                f'Maybe misspell with prefix: \'{url_prefix}\' uri: \'{uri}\'')
+        return real_uri
 
     def _load_view(self, view_cfg, user_configs):
         if isinstance(view_cfg, tuple):
@@ -78,15 +96,18 @@ class ViewManager(object):
         uri, view_class = view_cfg.uri, view_cfg.view_class
         user_config = user_configs.get(uri, Config.create())
 
-        pth = self.blueprint.url_prefix+uri if self.blueprint.url_prefix else uri
-        if uri in self._views:
+        real_uri = self._real_uri(uri)
+        view_cfg.uri = real_uri
+
+        pth = self.blueprint.url_prefix+real_uri
+        if real_uri in self._views:
             self.logger.warn(
-                f'View already existed, {pth} {view_class}')
+                f'Skip, view already existed, {pth} {view_class}')
             return
 
         view = View.create(self.application, self.blueprint,
                            view_cfg, user_config)
-        self._views[uri] = view
+        self._views[real_uri] = view
         self.logger.debug(f'Load view, {pth} {view.view_cls}')
 
     def load_view(self, view_cfg, user_configs):
@@ -97,10 +118,14 @@ class ViewManager(object):
 
     @classmethod
     def create(cls, application):
-        prefix = None
-        if not Config.get(application.app_cfg, 'root'):
-            prefix = Config.get(application.app_cfg,
-                                'prefix', '/' + application.name)
+        logger = application.get_logger(cls.__name__)
+
+        _prefix = Config.get(application.app_cfg, 'prefix',
+                             f'/{application.name}')
+        prefix = normalize_slash(_prefix)
+
+        if not prefix == _prefix:
+            logger.warn(f'Normalize prefix from \'{_prefix}\' to \'{prefix}\'')
 
         blueprint = Blueprint(application.name, url_prefix=prefix)
 
@@ -114,7 +139,6 @@ class ViewManager(object):
             if uri:
                 Config.pop(v, 'uri')
                 user_configs[uri] = v
-
         for view_cfg in Config.get(application.core_config, 'VIEWS', []):
             view_manager.load_view(view_cfg, user_configs)
 
@@ -124,10 +148,9 @@ class ViewManager(object):
             if uri:
                 Config.pop(v, 'uri')
                 static_configs[uri] = v
-        statics_config = Config.get(application.core_config, 'STATICS', [])
-        for static_config in statics_config:
-            view_manager.load_static(static_config, static_configs.get(
-                static_config.uri, Config.create()))
+        for static_cfg in Config.get(application.core_config, 'STATICS', []):
+            view_manager.load_static(static_cfg, static_configs.get(
+                static_cfg.uri, Config.create()))
 
         application.sanic.blueprint(blueprint)
 

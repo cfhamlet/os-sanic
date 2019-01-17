@@ -1,4 +1,19 @@
-from os_sanic.utils import deep_update
+from os_sanic.utils import deep_update, normalize_slash
+
+
+def test_normalize_prefix():
+    data = [
+        ('/', '/'),
+        ('a/', '/a/'),
+        ('//a', '/a'),
+        ('/a//', '/a/'),
+        ('', '/'),
+        ('/a', '/a'),
+        ('/a///c', '/a/c'),
+    ]
+
+    for raw, expect in data:
+        assert normalize_slash(raw) == expect
 
 
 def test_deep_update():

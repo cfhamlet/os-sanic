@@ -1,7 +1,17 @@
 import collections
 import inspect
+import re
 from importlib import import_module
 from pkgutil import iter_modules
+
+
+def normalize_slash(tag, with_prefix_slash=True):
+    tag = re.sub('[/]+', '/', tag)
+
+    if with_prefix_slash and not tag.startswith('/'):
+        tag = '/' + tag
+
+    return tag
 
 
 def walk_modules(module_path, skip_fail=True):

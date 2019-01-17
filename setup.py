@@ -31,6 +31,9 @@ setup(
     entry_points={
         'console_scripts': ['os-sanic = os_sanic.manage:main']
     },
+    extras_require={
+        'openapi': ['sanic-openapi'],
+    },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

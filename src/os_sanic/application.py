@@ -40,13 +40,13 @@ class Application(Workflowable):
 
     @property
     def sanic(self):
-        return self.context.application_manager.sanic
+        return self.application_manager.sanic
 
     def get_extension(self, extension_path):
         if '.' not in extension_path:
             extension_path = '.'.join((self.name, extension_path))
 
-        return self.context.application_manager.get_extension(extension_path)
+        return self.application_manager.get_extension(extension_path)
 
     def __getattr__(self, attr):
         try:
@@ -98,7 +98,6 @@ class ApplicationManager(Workflowable):
         self.sanic = sanic
         self.logger = getLogger(self.__class__.__name__)
         self._apps = OrderedDict()
-        self._root_app = None
         [setattr(self, method, partial(self.__call, method))
          for method in ('run', 'setup', 'cleanup')]
 
@@ -126,31 +125,31 @@ class ApplicationManager(Workflowable):
     def apps(self):
         return self._apps.values()
 
+    def _load_app(self, app_cfg):
+        if isinstance(app_cfg, str):
+            app_cfg = Config.create(package=app_cfg)
+        if not Config.get(app_cfg, 'package'):
+            self.logger.warn(f'Skip, no package {app_cfg}')
+            return
+
+        app_name = app_cfg.package.split('.')[-1]
+        app_name = Config.get(app_cfg, 'name', app_name)
+        if not app_name:
+            self.logger.warn(f'Skip, no valid app name {app_cfg}')
+            return
+        app_cfg.name = app_name
+        if app_name in self._apps:
+            self.logger.warn(f'Skip, app already exists, {app_name}')
+            return
+
+        self.logger.debug(
+            f'Load app, {app_name} <package \'{app_cfg.package}>\'')
+        app = Application.create(self, app_cfg)
+        self._apps[app_name] = app
+
     def load_app(self, app_cfg):
         try:
-            if isinstance(app_cfg, str):
-                app_cfg = Config.create(package=app_cfg)
-            if not Config.get(app_cfg, 'package'):
-                self.logger.warn(f'Load app skip, no package {app_cfg}')
-                return
-
-            if Config.get(app_cfg, 'root') and self._root_app:
-                self.logger.warn(f'Root app exist: {self._root_app.name}')
-                Config.pop(app_cfg, 'root')
-
-            app_name = app_cfg.package.split('.')[-1]
-            app_name = Config.get(app_cfg, 'name', app_name)
-            app_cfg.name = app_name
-            if app_name in self._apps:
-                self.logger.warn(f'App already exists, {app_name}')
-                return
-
-            self.logger.debug(
-                f'Load app, {app_name} <package \'{app_cfg.package}>\'')
-            app = Application.create(self, app_cfg)
-            if Config.get(app_cfg, 'root'):
-                self._root_app = app
-            self._apps[app_name] = app
+            self._load_app(app_cfg)
         except Exception as e:
             self.logger.error(f'Load app fail, {e}, {app_cfg}')
 
