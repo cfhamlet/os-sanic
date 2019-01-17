@@ -1,4 +1,3 @@
-from os_sanic.view import normalize_prefix
 import json
 
 def test_001(os_sanic_server):
