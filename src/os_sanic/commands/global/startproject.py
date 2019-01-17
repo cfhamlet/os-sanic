@@ -28,7 +28,7 @@ def cli(ctx, project_name, with_app):
 
     config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
     config.project_name = project_name
-    config.with_example = with_app
+    config.with_app = with_app
 
     if with_app:
         app_name = with_app

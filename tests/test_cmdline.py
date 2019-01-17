@@ -146,7 +146,7 @@ def test_run_001(new_project, run_server):
     proj_path = new_project(proj_name, app_name)
     port = unused_port()
     run_server(proj_path, 'run', '--port', f'{port}')
-    url = f'http://127.0.0.1:{port}/'
+    url = f'http://127.0.0.1:{port}/example'
     r = requests.get(url)
     assert r.status_code == 200
     d = json.loads(r.content)

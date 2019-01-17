@@ -88,13 +88,12 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
         {
             'name': 'example',
             'package': 'apps.example',
-            'root': True,
+            'prefix': '/example',
         }
     ]
     ```
     - ``name``: the app name, if not set will use ``package``'s last fragment
     - ``package``: the app's package
-    - ``root``: if the ``root`` is set ``True``, the app's views will not use app name as url prefix.
     - ``prefix``: use this as the app's views prefix otherwise use app name
     
 * App definition
@@ -139,7 +138,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
         STATICS = [
             {
                 'uri': '/static',
-                'file_or_directory': '.'
+                'file_or_directory': '.',
             }
         ]
         ```
