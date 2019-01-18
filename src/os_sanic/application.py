@@ -26,14 +26,12 @@ class Context(dict):
 
 class Application(Workflowable):
 
-    def __init__(self, context):
+    def __init__(self, name, context):
+        self.name = name
         self.context = context
-
         self.logger = getLogger(f'App.{self.name}')
-
-        self.extension_manager = ExtensionManager.create(self)
-
-        self.view_manager = ViewManager.create(self)
+        self.extension_manager = ExtensionManager(self)
+        self.view_manager = ViewManager(self)
 
         [setattr(self, method, partial(self.__call, method))
          for method in ('run', 'setup', 'cleanup')]
@@ -56,10 +54,6 @@ class Application(Workflowable):
         except KeyError as ke:
             raise AttributeError("No '{}'".format(ke.args[0]))
 
-    @property
-    def name(self):
-        return self.context.app_cfg.name
-
     def get_logger(self, tag):
         return getLogger(f'App.{self.name}.{tag}')
 
@@ -70,7 +64,7 @@ class Application(Workflowable):
             self.logger.error(f'Method error {method}, {e}')
 
     @staticmethod
-    def create(application_manager, app_cfg):
+    def create(application_manager, app_name, app_cfg):
 
         app_module = import_module('.'.join((app_cfg.package, 'app')))
         runtime_path = os.path.dirname(app_module.__file__)
@@ -89,7 +83,7 @@ class Application(Workflowable):
         context.core_config = core_config
         context.user_config = user_config
 
-        return Application(context)
+        return Application(app_name, context)
 
 
 class ApplicationManager(Workflowable):
@@ -98,6 +92,7 @@ class ApplicationManager(Workflowable):
         self.sanic = sanic
         self.logger = getLogger(self.__class__.__name__)
         self._apps = OrderedDict()
+        self._load_apps()
         [setattr(self, method, partial(self.__call, method))
          for method in ('run', 'setup', 'cleanup')]
 
@@ -125,6 +120,14 @@ class ApplicationManager(Workflowable):
     def apps(self):
         return self._apps.values()
 
+    def _load_apps(self):
+        for app_cfg in Config.create(
+                apps=self.sanic.config.get('INSTALLED_APPS', [])).apps:
+            try:
+                self._load_app(app_cfg)
+            except Exception as e:
+                self.logger.error(f'Load app fail, {e}, {app_cfg}')
+
     def _load_app(self, app_cfg):
         if isinstance(app_cfg, str):
             app_cfg = Config.create(package=app_cfg)
@@ -137,30 +140,11 @@ class ApplicationManager(Workflowable):
         if not app_name:
             self.logger.warn(f'Skip, no valid app name {app_cfg}')
             return
-        app_cfg.name = app_name
         if app_name in self._apps:
             self.logger.warn(f'Skip, app already exists, {app_name}')
             return
 
         self.logger.debug(
             f'Load app, {app_name} <package \'{app_cfg.package}>\'')
-        app = Application.create(self, app_cfg)
-        self._apps[app_name] = app
-
-    def load_app(self, app_cfg):
-        try:
-            self._load_app(app_cfg)
-        except Exception as e:
-            self.logger.error(f'Load app fail, {e}, {app_cfg}')
-
-    @classmethod
-    def create(cls, sanic):
-
-        assert not hasattr(
-            sanic, 'application'), 'sanic instance already has \'application\' attribute'
-
-        am = cls(sanic)
-        for app_cfg in Config.create(
-                apps=sanic.config.get('INSTALLED_APPS', [])).apps:
-            am.load_app(app_cfg)
-        return am
+        app = Application.create(self, app_name, app_cfg)
+        self._apps[app.name] = app

@@ -71,7 +71,7 @@ class Server(object):
 
         if app.config.get('DEBUG', False):
             if os.environ.get('SANIC_SERVER_RUNNING') != 'true':
-                return cls(ApplicationManager.create(app), False)
+                return cls(ApplicationManager(app), False)
 
             logger.setLevel('DEBUG')
             logger.debug('Debug mode')
@@ -80,4 +80,4 @@ class Server(object):
 
         logger.debug(f'Config: {app.config}')
 
-        return cls(ApplicationManager.create(app))
+        return cls(ApplicationManager(app))
