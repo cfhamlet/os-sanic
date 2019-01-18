@@ -31,23 +31,34 @@ class View(object):
             view_class, HTTPMethodView, package=package)
 
         view_cls.application = application
+        view_cls.config = config
 
-        kwargs = {}
-        if len(config) > 0:
-            kwargs['config'] = config
-
-        blueprint.add_route(view_cls.as_view(**kwargs), uri)
+        blueprint.add_route(view_cls.as_view(), uri)
 
         return cls(uri, view_cls, config)
 
 
 class ViewManager(object):
 
-    def __init__(self, application, blueprint):
+    def __init__(self, application):
         self.application = application
-        self.blueprint = blueprint
-        self._views = OrderedDict()
         self.logger = application.get_logger(self.__class__.__name__)
+        self.blueprint = self._create_blueprint()
+        self._views = OrderedDict()
+        self._load_views()
+        self._load_statics()
+        self.application.sanic.blueprint(self.blueprint)
+
+    def _create_blueprint(self):
+        _prefix = Config.get(self.application.app_cfg, 'prefix',
+                             f'/{self.application.name}')
+        prefix = normalize_slash(_prefix)
+
+        if not prefix == _prefix:
+            self.logger.warn(
+                f'Normalize prefix from \'{_prefix}\' to \'{prefix}\'')
+
+        return Blueprint(self.application.name, url_prefix=prefix)
 
     @property
     def views(self):
@@ -57,7 +68,7 @@ class ViewManager(object):
     def statics(self):
         return self.blueprint.statics
 
-    def load_static(self, static_cfg, user_config):
+    def _load_static(self, static_cfg, user_config):
         try:
             s = Config.to_dict(static_cfg)
             s.update(Config.to_dict(user_config))
@@ -110,48 +121,25 @@ class ViewManager(object):
         self._views[real_uri] = view
         self.logger.debug(f'Load view, {pth} {view.view_cls}')
 
-    def load_view(self, view_cfg, user_configs):
-        try:
-            self._load_view(view_cfg, user_configs)
-        except Exception as e:
-            self.logger.error(f'Load view error, {e}')
-
-    @classmethod
-    def create(cls, application):
-        logger = application.get_logger(cls.__name__)
-
-        _prefix = Config.get(application.app_cfg, 'prefix',
-                             f'/{application.name}')
-        prefix = normalize_slash(_prefix)
-
-        if not prefix == _prefix:
-            logger.warn(f'Normalize prefix from \'{_prefix}\' to \'{prefix}\'')
-
-        blueprint = Blueprint(application.name, url_prefix=prefix)
-
-        view_manager = cls(application, blueprint)
+    def _load_views(self):
 
         user_configs = {}
-        for v in Config.get(application.user_config, 'VIEWS', []):
+        for v in Config.get(self.application.user_config, 'VIEWS', []):
             if not isinstance(v, Config):
                 continue
-            uri = Config.get(v, 'uri')
+            uri = Config.pop(v, 'uri')
             if uri:
-                Config.pop(v, 'uri')
                 user_configs[uri] = v
-        for view_cfg in Config.get(application.core_config, 'VIEWS', []):
-            view_manager.load_view(view_cfg, user_configs)
+        for view_cfg in Config.get(self.application.core_config, 'VIEWS', []):
+            try:
+                self._load_view(view_cfg, user_configs)
+            except Exception as e:
+                self.logger.error(f'Load view error, {e}')
 
-        static_configs = {}
-        for v in Config.get(application.user_config, 'STATICS', []):
-            uri = Config.get(v, 'uri')
-            if uri:
-                Config.pop(v, 'uri')
-                static_configs[uri] = v
-        for static_cfg in Config.get(application.core_config, 'STATICS', []):
-            view_manager.load_static(static_cfg, static_configs.get(
+    def _load_statics(self):
+        static_configs = dict([(cfg.uri, cfg) for cfg in Config.get(
+            self.application.user_config, 'STATICS', [])])
+
+        for static_cfg in Config.get(self.application.core_config, 'STATICS', []):
+            self._load_static(static_cfg, static_configs.get(
                 static_cfg.uri, Config.create()))
-
-        application.sanic.blueprint(blueprint)
-
-        return view_manager

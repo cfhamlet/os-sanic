@@ -1,11 +1,16 @@
 import json
 
+
 def test_001(os_sanic_server):
     server = os_sanic_server(
         'test', None, 'tests.apps.case01')
     _, response = server.sanic.test_client.get('/case01')
     assert response.status == 200
     assert json.loads(response.body) == {'view': 'Case01'}
+
+    _, response = server.sanic.test_client.get('/case01/config')
+    assert response.status == 200
+    assert json.loads(response.body) == {'key01': 'value01'}
 
 
 def test_002(os_sanic_server):

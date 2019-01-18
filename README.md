@@ -148,15 +148,16 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
 * View Class
 
-    The view class is normal sanic [HTTPMethodView](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). If you define extra params in the ``VIEWS``, they will be attached to a config object and pass to the view's ``__init__()``
+    The view class is normal sanic [HTTPMethodView](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). The params defined in the ``VIEWS``  will be attached to a config object and pass to the View class
     
     ```
     from sanic.views import HTTPMethodView
     
     class ExampleView(HTTPMethodView):
     
-        def __init__(self, config):
-            config.key1
+        def get(self, request):
+            self.config.key1
+            ...
     ```
 
 * Extension Class
@@ -201,9 +202,9 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
         class ExampleView(HTTPMethodView):
 
-        def get(self, request):
-            self.application
-            ...
+            def get(self, request):
+                self.application
+                ...
         ```
         
     - you can get extension instance by:
