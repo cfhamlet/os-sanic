@@ -6,7 +6,7 @@ import click
 import os_sanic
 from os_sanic.commands import create_from_tpl, valid_name
 from os_sanic.commands.project.startapp import app_creation_params, create_app
-from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
+from os_sanic.config import SANIC_ENV_PREFIX, create
 
 
 @click.command()
@@ -26,7 +26,7 @@ def cli(ctx, project_name, with_app):
     if os.path.exists(proj_dst_dir):
         ctx.fail(f'Project already existed, {proj_dst_dir}')
 
-    config = create_sanic_config(load_env=SANIC_ENV_PREFIX)
+    config = create(load_env=SANIC_ENV_PREFIX)
     config.project_name = project_name
     config.with_app = with_app
 

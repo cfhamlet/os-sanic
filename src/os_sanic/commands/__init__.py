@@ -31,6 +31,8 @@ def valid_name(ctx, param, value):
 
 
 def valid_log_level(ctx, param, value):
+    if value is None:
+        return value
     v = value.upper()
     if v not in _nameToLevel:
         choices = ' '.join(_nameToLevel.keys())
