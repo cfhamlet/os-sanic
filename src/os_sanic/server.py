@@ -7,7 +7,7 @@ from sanic import Sanic
 from sanic.log import LOGGING_CONFIG_DEFAULTS
 
 from os_sanic.application import ApplicationManager
-from os_sanic.config import SANIC_ENV_PREFIX, create_sanic_config
+from os_sanic.config import SANIC_ENV_PREFIX, create
 from os_sanic.log import LOGGING_CONFIG_PATCH, logger
 from os_sanic.utils import deep_update
 from os_sanic.monkey_patch import patch
@@ -57,9 +57,7 @@ class Server(object):
         if isinstance(app, str):
             app = Sanic(app, load_env=env_prefix)
 
-        conf = create_sanic_config(load_env=env_prefix)
-        if config:
-            conf.update(config)
+        conf = create(config, load_env=env_prefix)
 
         app.config.update(conf)
 

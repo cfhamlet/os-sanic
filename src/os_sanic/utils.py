@@ -1,8 +1,13 @@
 import collections
 import inspect
 import re
+from enum import Enum
 from importlib import import_module
+from logging import _nameToLevel
 from pkgutil import iter_modules
+
+LogLevel = Enum('LogLevel', [(k, k) for k in _nameToLevel], type=str)
+LogLevel.__repr__ = lambda x: x.name
 
 
 def normalize_slash(tag, with_prefix_slash=True):
