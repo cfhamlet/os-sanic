@@ -56,30 +56,29 @@ def statics_info(app):
 
 
 def app_info(app):
-    info = OrderedDict()
-    info['name'] = app.name
-    info.update(app.app_cfg.dict())
+    info = app.app_cfg.copy(
+        update={'prefix': app.blueprint.url_prefix}).dict()
 
     for method in (extensions_info, views_info, statics_info):
-        i = method(app)
+        i=method(app)
         if i:
-            info[method.__name__[:-5]] = i
+            info[method.__name__[:-5]]=i
 
     return info
 
 
 @click.command()
 @click.option('-c', '--config-file',
-              default='config.py',
-              show_default=True,
-              type=click.File(mode='r'),
-              help='Config file')
+              default = 'config.py',
+              show_default = True,
+              type = click.File(mode='r'),
+              help = 'Config file')
 @click.pass_context
 def cli(ctx, config_file):
     '''Show config details.'''
 
     ctx.ensure_object(dict)
 
-    server = create_server(ctx.obj['app'], config_file=config_file)
+    server=create_server(ctx.obj['app'], config_file = config_file)
     server_info(server)
     apps_info(server.application_manager)
