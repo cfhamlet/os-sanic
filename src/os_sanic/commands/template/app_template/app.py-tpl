@@ -5,7 +5,7 @@ EXTENSIONS = [
     },
 ]
 
-VIEWS = [
+ROUTES = [
     {
         'uri': '{{uri}}',
         'view_class': '.view.{{view_class}}',

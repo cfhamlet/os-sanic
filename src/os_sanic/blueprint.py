@@ -14,7 +14,7 @@ class URIModel(BaseModel):
         allow_extra = True
 
 
-class ViewCfg(URIModel):
+class RouteCfg(URIModel):
     view_class: str
 
 
@@ -46,8 +46,8 @@ def new_blueprint(application):
     return Blueprint(application.name, url_prefix=prefix)
 
 
-def load_view(application, blueprint, view_cfg, user_cfg):
-    config = view_cfg.copy(update=user_cfg.copy(
+def load_route(application, blueprint, route_cfg, user_cfg):
+    config = route_cfg.copy(update=user_cfg.copy(
         exclude=set(['view_class'])).dict())
 
     package = None
@@ -63,23 +63,23 @@ def load_view(application, blueprint, view_cfg, user_cfg):
     view = blueprint.add_route(view_cls.as_view(), real_uri)
 
     pth = blueprint.url_prefix+real_uri
-    application.logger.debug(f'Load view, {pth} {view.view_class}')
+    application.logger.debug(f'Load route, {pth} {view.view_class}')
 
 
-def load_views(application, blueprint):
+def load_routes(application, blueprint):
     user_cfgs = dict([(cfg['uri'], URIModel(**cfg))
-                      for cfg in application.user_cfg.VIEWS if 'uri' in cfg])
+                      for cfg in application.user_cfg.ROUTES if 'uri' in cfg])
 
-    for cfg in application.core_cfg.VIEWS:
+    for cfg in application.core_cfg.ROUTES:
         try:
             if isinstance(cfg, tuple):
                 cfg = dict(uri=cfg[0], view_class=cfg[1])
-            view_cfg = ViewCfg(**cfg)
+            route_cfg = RouteCfg(**cfg)
 
-            load_view(application, blueprint, view_cfg, user_cfgs.get(
-                view_cfg.uri, view_cfg))
+            load_route(application, blueprint, route_cfg, user_cfgs.get(
+                route_cfg.uri, route_cfg))
         except Exception as e:
-            application.logger.error(f'Load view error, {e}, {cfg}')
+            application.logger.error(f'Load route error, {e}, {cfg}')
 
 
 def load_static(application, blueprint, static_cfg, user_cfg):
@@ -111,7 +111,7 @@ def load_statics(application, blueprint):
 
 def create(application):
     blueprint = new_blueprint(application)
-    load_views(application, blueprint)
+    load_routes(application, blueprint)
     load_statics(application, blueprint)
     application.sanic.blueprint(blueprint)
     return blueprint

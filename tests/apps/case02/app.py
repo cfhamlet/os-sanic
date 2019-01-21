@@ -5,7 +5,7 @@ EXTENSIONS = [
     }
 ]
 
-VIEWS = [
+ROUTES = [
     {
         'uri': '/',
         'view_class': '.view.Case02View'

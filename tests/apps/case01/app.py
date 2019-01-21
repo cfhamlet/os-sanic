@@ -5,7 +5,7 @@ EXTENSIONS = [
     }
 ]
 
-VIEWS = [
+ROUTES = [
     ('/', '.view.Case01View'),
     {
         'uri': '/config',

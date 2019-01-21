@@ -23,7 +23,7 @@ class AppCfg(NamedModel):
 
 class ApplicationCfg(BaseModel):
     EXTENSIONS: List = []
-    VIEWS: List = []
+    ROUTES: List = []
     STATICS: List = []
 
     class Config:

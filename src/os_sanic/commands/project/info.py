@@ -34,13 +34,13 @@ def extensions_info(app):
     return exts_info
 
 
-def views_info(app):
-    views_info = []
+def routes_info(app):
+    routes_info = []
     for route in app.blueprint.routes:
         view_cls = route.handler.view_class
-        views_info.append(view_cls.config.copy(
+        routes_info.append(view_cls.config.copy(
             update={'uri': route.uri, 'view_class': str(view_cls)}).dict())
-    return views_info
+    return routes_info
 
 
 def statics_info(app):
@@ -59,7 +59,7 @@ def app_info(app):
     info = app.app_cfg.copy(
         update={'prefix': app.blueprint.url_prefix}).dict()
 
-    for method in (extensions_info, views_info, statics_info):
+    for method in (extensions_info, routes_info, statics_info):
         i=method(app)
         if i:
             info[method.__name__[:-5]]=i
