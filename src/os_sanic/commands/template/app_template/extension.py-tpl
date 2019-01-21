@@ -6,8 +6,5 @@ class {{extension_class}}(Extension):
     def setup(self):
         self.logger.info("setup")
 
-    def run(self):
-        self.logger.info("run")
-
     def cleanup(self):
         self.logger.info("cleanup")

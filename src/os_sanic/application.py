@@ -94,7 +94,7 @@ class ApplicationManager(Workflowable):
         self._apps = OrderedDict()
         self._load_apps()
         [setattr(self, method, partial(self.__call, method))
-         for method in ('run', 'setup', 'cleanup')]
+         for method in ('setup', 'cleanup')]
 
     async def __call(self, method):
         iter = self._apps.keys()

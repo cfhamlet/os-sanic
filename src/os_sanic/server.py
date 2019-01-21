@@ -21,9 +21,8 @@ class Server(object):
 
     def __register_workflow(self):
         [self.sanic.register_listener(partial(self.__call, method), event)
-         for method, event in zip(('run', 'setup', 'cleanup'),
+         for method, event in zip(('setup', 'cleanup'),
                                   ('before_server_start',
-                                   'after_server_start',
                                    'after_server_stop'))]
 
     @property

@@ -172,10 +172,9 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     - ``logger``, the built-in logger object
     
     
-    The extension class has three usefull methods invoked by the framework, ``setup``, ``run``, ``cleanup``, they all can be normal method or async method
+    The extension class has two usefull methods invoked by the framework, ``setup``, ``cleanup``, they all can be normal method or async method
     
     - ``setup``: called before server start
-    - ``run``: called afeter server run
     - ``cleanup``: called after server stop, if there are multi extensions configured in ``EXTENSIONS``, the cleanup methods execute order will from last extension to the first one
     
     

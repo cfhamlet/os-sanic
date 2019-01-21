@@ -38,7 +38,7 @@ class ExtensionManager(Workflowable):
         self._extensions = OrderedDict()
         self._load_extensions()
         [setattr(self, method, partial(self.__call, method))
-         for method in ('run', 'setup', 'cleanup')]
+         for method in ('setup', 'cleanup')]
 
     def _load_extensions(self):
         user_configs = dict([(Config.get(cfg, 'name'), cfg) for cfg in Config.get(
