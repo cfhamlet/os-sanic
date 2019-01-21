@@ -84,7 +84,7 @@ class ViewManager(object):
             real_uri = real_uri[1:]
         if warn:
             self.logger.warn(
-                f'Maybe misspell with prefix: \'{url_prefix}\' uri: \'{uri}\'')
+                f'Maybe misspell with prefix: \'{url_prefix}\', uri: \'{uri}\'')
         return real_uri
 
     def _load_view(self, view_cfg, user_cfg):

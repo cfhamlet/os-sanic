@@ -164,9 +164,8 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
     The extenion class must inherit from ``os_sanic.extension.Extension``.
     
-    The base class's members are ``name``, ``config``, ``application``, ``logger``
+    The base class's members are ``config``, ``application`` and ``logger``
     
-    - ``name``: the extension name
     - ``config``: if you define extra params in the ``EXTENSIONS``, they will be attached to this config object
     - ``application``: a project scope object for accessing all of the apps
     - ``logger``, the built-in logger object
