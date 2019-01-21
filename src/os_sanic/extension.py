@@ -2,33 +2,32 @@ from collections import OrderedDict
 from functools import partial
 from inspect import isawaitable
 
-from os_config import Config
-
-from os_sanic.utils import load_class
+from os_sanic.utils import NamedModel, load_class
 from os_sanic.workflow import Workflowable
+
+
+class ExtensionCfg(NamedModel):
+    extension_class: str
 
 
 class Extension(Workflowable):
 
-    def __init__(self, application, name, config):
+    def __init__(self, application, config):
         self.application = application
-        self.name = name
         self.config = config
-        self.logger = application.get_logger(name)
+        self.logger = application.get_logger(config.name)
 
     @staticmethod
-    def create(application, ext_cfg, user_config):
-        ec = ext_cfg.extension_class
-        config = Config.create()
-        Config.update(config, ext_cfg)
-        Config.update(config, user_config)
-        name = Config.pop(config, 'name')
-        Config.pop(config, 'extension_class')
+    def create(application, ext_cfg, user_cfg):
+        config = ext_cfg.copy(update=user_cfg.copy(
+            exclude=set(['extension_class'])).dict())
+
         package = None
-        if ec.startswith('.'):
+        if config.extension_class.startswith('.'):
             package = application.app_cfg.package
-        cls = load_class(ec, Extension, package=package)
-        return cls(application, name, config)
+        cls = load_class(config.extension_class, Extension, package=package)
+
+        return cls(application, config)
 
 
 class ExtensionManager(Workflowable):
@@ -41,16 +40,12 @@ class ExtensionManager(Workflowable):
          for method in ('setup', 'cleanup')]
 
     def _load_extensions(self):
-        user_configs = dict([(Config.get(cfg, 'name'), cfg) for cfg in Config.get(
-            self.application.user_config, 'EXTENSIONS', [])])
+        user_cfgs = dict([(cfg['name'], NamedModel(**cfg))
+                          for cfg in self.application.user_cfg.EXTENSIONS if 'name' in cfg])
 
-        for ext_cfg in Config.get(self.application.core_config, 'EXTENSIONS', []):
-            name = Config.get(ext_cfg, 'name')
-            if name:
-                self._load_extension(
-                    ext_cfg, user_configs.get(name, Config.create()))
-            else:
-                self.logger.warn(f'No name specified {ext_cfg}')
+        for cfg in self.application.core_cfg.EXTENSIONS:
+            ext_cfg = ExtensionCfg(**cfg)
+            self._load_extension(ext_cfg, user_cfgs.get(ext_cfg.name, ext_cfg))
 
     def get_extension(self, name):
         return self._extensions[name]
@@ -74,7 +69,7 @@ class ExtensionManager(Workflowable):
             except Exception as e:
                 self.logger.error(f'Extension error {key}.{method}, {e}')
 
-    def _load_extension(self, ext_cfg, user_config):
+    def _load_extension(self, ext_cfg, user_cfg):
 
         try:
             name = ext_cfg.name
@@ -82,15 +77,8 @@ class ExtensionManager(Workflowable):
                 self.logger.warn(f'Extension already exists, {name}')
                 return
             extension = Extension.create(
-                self.application, ext_cfg, user_config)
+                self.application, ext_cfg, user_cfg)
             self._extensions[name] = extension
             self.logger.debug(f'Load extension, {name} {extension.__class__}')
         except Exception as e:
             self.logger.error(f'Load extension fail {e}, {ext_cfg}')
-
-    @classmethod
-    def create(cls, application):
-
-        em = cls(application)
-
-        return em

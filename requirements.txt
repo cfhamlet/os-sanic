@@ -1,5 +1,4 @@
 sanic>=0.8
 jinja2
-os-config>=0.2.3
 click
 pydantic

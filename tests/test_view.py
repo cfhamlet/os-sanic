@@ -10,7 +10,7 @@ def test_001(os_sanic_server):
 
     _, response = server.sanic.test_client.get('/case01/config')
     assert response.status == 200
-    assert json.loads(response.body) == {'key01': 'value01'}
+    assert json.loads(response.body)['key01'] == 'value01'
 
 
 def test_002(os_sanic_server):
