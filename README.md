@@ -164,18 +164,16 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
     The extenion class must inherit from ``os_sanic.extension.Extension``.
     
-    The base class's members are ``name``, ``config``, ``application``, ``logger``
+    The base class's members are ``config``, ``application`` and ``logger``
     
-    - ``name``: the extension name
     - ``config``: if you define extra params in the ``EXTENSIONS``, they will be attached to this config object
     - ``application``: a project scope object for accessing all of the apps
     - ``logger``, the built-in logger object
     
     
-    The extension class has three usefull methods invoked by the framework, ``setup``, ``run``, ``cleanup``, they all can be normal method or async method
+    The extension class has two usefull methods invoked by the framework, ``setup``, ``cleanup``, they all can be normal method or async method
     
     - ``setup``: called before server start
-    - ``run``: called afeter server run
     - ``cleanup``: called after server stop, if there are multi extensions configured in ``EXTENSIONS``, the cleanup methods execute order will from last extension to the first one
     
     

@@ -1,13 +1,22 @@
 import collections
 import inspect
 import re
+import types
 from enum import Enum
 from importlib import import_module
 from logging import _nameToLevel
 from pkgutil import iter_modules
+from pydantic import BaseModel
 
 LogLevel = Enum('LogLevel', [(k, k) for k in _nameToLevel], type=str)
 LogLevel.__repr__ = lambda x: x.name
+
+
+class NamedModel(BaseModel):
+    name: str
+
+    class Config:
+        allow_extra = True
 
 
 def normalize_slash(tag, with_prefix_slash=True):
@@ -64,3 +73,16 @@ def deep_update(d, u):
         else:
             d[k] = v
     return d
+
+
+def load_module_from_pyfile(filename):
+    module = types.ModuleType('config')
+    module.__file__ = filename
+    try:
+        with open(filename) as config_file:
+            exec(compile(config_file.read(), filename, 'exec'),
+                 module.__dict__)
+    except IOError as e:
+        e.strerror = 'Unable to load configuration file (%s)' % e.strerror
+        raise
+    return module

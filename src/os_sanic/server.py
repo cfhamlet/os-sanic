@@ -14,24 +14,23 @@ from os_sanic.monkey_patch import patch
 
 
 class Server(object):
-    def __init__(self, app_manager, enable_workflow=True):
-        self.app_manager = app_manager
+    def __init__(self, application_manager, enable_workflow=True):
+        self.application_manager = application_manager
         if enable_workflow:
             self.__register_workflow()
 
     def __register_workflow(self):
         [self.sanic.register_listener(partial(self.__call, method), event)
-         for method, event in zip(('run', 'setup', 'cleanup'),
+         for method, event in zip(('setup', 'cleanup'),
                                   ('before_server_start',
-                                   'after_server_start',
                                    'after_server_stop'))]
 
     @property
     def sanic(self):
-        return self.app_manager.sanic
+        return self.application_manager.sanic
 
     async def __call(self, method, app, loop):
-        await getattr(self.app_manager, method)()
+        await getattr(self.application_manager, method)()
 
     def _run_args(self):
         argspec = inspect.getargspec(self.sanic.run)

@@ -161,7 +161,6 @@ def test_run_002(new_project, run_server):
     xproc = run_server(proj_path, 'run', '--port', f'{port}', '-l', 'DEBUG')
     info = xproc.getinfo('sanic_server')
     log = info.logpath.open().read()
-    expects = ['[App.example.Example] [INFO] run',
-               '[App.example.Example] [INFO] setup']
+    expects = ['[App.example.Example] [INFO] setup']
     for exp in expects:
         assert exp in log
