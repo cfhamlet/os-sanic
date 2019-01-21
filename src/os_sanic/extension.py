@@ -44,8 +44,12 @@ class ExtensionManager(Workflowable):
                           for cfg in self.application.user_cfg.EXTENSIONS if 'name' in cfg])
 
         for cfg in self.application.core_cfg.EXTENSIONS:
-            ext_cfg = ExtensionCfg(**cfg)
-            self._load_extension(ext_cfg, user_cfgs.get(ext_cfg.name, ext_cfg))
+            try:
+                ext_cfg = ExtensionCfg(**cfg)
+                self._load_extension(
+                    ext_cfg, user_cfgs.get(ext_cfg.name, ext_cfg))
+            except Exception as e:
+                self.logger.error(f'Load extension fail {e}, {ext_cfg}')
 
     def get_extension(self, name):
         return self._extensions[name]
@@ -70,15 +74,11 @@ class ExtensionManager(Workflowable):
                 self.logger.error(f'Extension error {key}.{method}, {e}')
 
     def _load_extension(self, ext_cfg, user_cfg):
-
-        try:
-            name = ext_cfg.name
-            if name in self._extensions:
-                self.logger.warn(f'Extension already exists, {name}')
-                return
-            extension = Extension.create(
-                self.application, ext_cfg, user_cfg)
-            self._extensions[name] = extension
-            self.logger.debug(f'Load extension, {name} {extension.__class__}')
-        except Exception as e:
-            self.logger.error(f'Load extension fail {e}, {ext_cfg}')
+        name = ext_cfg.name
+        if name in self._extensions:
+            self.logger.warn(f'Extension already exists, {name}')
+            return
+        extension = Extension.create(
+            self.application, ext_cfg, user_cfg)
+        self._extensions[name] = extension
+        self.logger.debug(f'Load extension, {name} {extension.__class__}')

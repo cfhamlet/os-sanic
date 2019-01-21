@@ -36,15 +36,16 @@ def extensions_info(app):
 
 def views_info(app):
     views_info = []
-    for uri, view in app.view_manager.views:
-        views_info.append(view.view_class.config.copy(
-            update={'uri': uri, 'view_class': str(view.view_class)}).dict())
+    for route in app.blueprint.routes:
+        view_cls = route.handler.view_class
+        views_info.append(view_cls.config.copy(
+            update={'uri': route.uri, 'view_class': str(view_cls)}).dict())
     return views_info
 
 
 def statics_info(app):
     statics_info = []
-    for static in app.view_manager.statics:
+    for static in app.blueprint.statics:
         static_info = OrderedDict()
         static_info['uri'] = static.uri
         static_info['file_or_directory'] = static.file_or_directory

@@ -11,8 +11,8 @@ from pydantic import BaseModel
 from os_sanic.extension import ExtensionCfg, ExtensionManager
 from os_sanic.log import getLogger
 from os_sanic.utils import NamedModel, load_module_from_pyfile
-from os_sanic.view import ViewManager
 from os_sanic.workflow import Workflowable
+from os_sanic import blueprint
 
 
 class AppCfg(NamedModel):
@@ -52,7 +52,7 @@ class Application(Workflowable):
         self.logger = getLogger(f'App.{self.name}')
 
         self.extension_manager = ExtensionManager(self)
-        self.view_manager = ViewManager(self)
+        self.blueprint = blueprint.create(self)
 
     @property
     def name(self):
