@@ -98,7 +98,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
     
 * App definition
 
-    App is defined in the ``app.py``. ``EXTENSIONS``, ``VIEWS`` and ``STATICS`` are the core components.
+    App is defined in the ``app.py``. ``EXTENSIONS``, ``ROUTES`` and ``STATICS`` are the core components.
     
     - ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding data, manage db connection and so forth. ``name`` and ``extension_class`` are necessary, other params will pass to extension instance's config.
     
@@ -112,18 +112,18 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
         ]
         ```
     
-    - ``VIEWS`` are used for http requests. The simple style:
+    - ``ROUTES`` are used for http requests. The simple style:
 
     
         ````
-        VIEWS = [('/', '.view.ExampleView'), ]
+        ROUTES = [('/', '.view.ExampleView'), ]
         ````
     
         More verbose style which can pass params:
     
 
         ```
-        VIEWS = [
+        ROUTES = [
             {
                 'uri': '/',
                 'view_class': '.view.ExampleView',
@@ -148,7 +148,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
 
 * View Class
 
-    The view class is normal sanic [HTTPMethodView](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). The params defined in the ``VIEWS``  will be attached to a config object and pass to the View class
+    The view class is normal sanic [HTTPMethodView](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#class-based-views). The params defined in the ``ROUTES``  will be attached to a config object and pass to the View class
     
     ```
     from sanic.views import HTTPMethodView
