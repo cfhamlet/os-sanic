@@ -214,7 +214,7 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project a
         or get other app's extension
 
         ```
-        application.get_extension('app_name.extension_name')
+        application.get_extension('app_name/extension_name')
         ```
 
     - get app relative logger

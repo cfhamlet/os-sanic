@@ -67,8 +67,8 @@ class Application(Workflowable):
         return self.application_manager.sanic
 
     def get_extension(self, extension_path):
-        if '.' not in extension_path:
-            extension_path = '.'.join((self.name, extension_path))
+        if '/' not in extension_path:
+            extension_path = '/'.join((self.name, extension_path))
 
         return self.application_manager.get_extension(extension_path)
 
@@ -131,7 +131,7 @@ class ApplicationManager(Workflowable):
         return self._apps[name]
 
     def get_extension(self, extension_path):
-        app_name, extension_name = extension_path.split('.', maxsplit=1)
+        app_name, extension_name = extension_path.split('/', maxsplit=1)
         app = self.get_app(app_name)
         return app.extension_manager.get_extension(extension_name)
 
