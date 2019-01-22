@@ -12,6 +12,7 @@ class URIModel(BaseModel):
 
     class Config:
         allow_extra = True
+        allow_mutation = False
 
 
 class RouteCfg(URIModel):

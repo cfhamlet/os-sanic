@@ -20,6 +20,9 @@ class AppCfg(NamedModel):
     prefix: str = None
     config: str = None
 
+    class Config:
+        allow_mutation = False
+
 
 class ApplicationCfg(BaseModel):
     EXTENSIONS: List = []
@@ -27,6 +30,7 @@ class ApplicationCfg(BaseModel):
     STATICS: List = []
 
     class Config:
+        allow_mutation = False
         ignore_extra = True
 
 

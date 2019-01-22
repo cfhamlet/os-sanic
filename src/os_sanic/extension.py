@@ -9,6 +9,9 @@ from os_sanic.workflow import Workflowable
 class ExtensionCfg(NamedModel):
     extension_class: str
 
+    class Config:
+        allow_mutation = False
+
 
 class Extension(Workflowable):
 
