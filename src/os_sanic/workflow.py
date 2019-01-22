@@ -1,4 +1,7 @@
-class Workflowable(object):
+from abc import ABCMeta
+
+
+class Workflowable(metaclass=ABCMeta):
     def setup(self):
         pass
 
