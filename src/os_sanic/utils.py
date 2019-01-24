@@ -2,21 +2,8 @@ import collections
 import inspect
 import re
 import types
-from enum import Enum
 from importlib import import_module
-from logging import _nameToLevel
 from pkgutil import iter_modules
-from pydantic import BaseModel
-
-LogLevel = Enum('LogLevel', [(k, k) for k in _nameToLevel], type=str)
-LogLevel.__repr__ = lambda x: x.name
-
-
-class NamedModel(BaseModel):
-    name: str
-
-    class Config:
-        allow_extra = True
 
 
 def normalize_slash(tag, with_prefix_slash=True):

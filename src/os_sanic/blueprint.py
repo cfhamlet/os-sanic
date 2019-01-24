@@ -1,26 +1,10 @@
 import os
 
-from pydantic import BaseModel
 from sanic import Blueprint
 from sanic.views import HTTPMethodView
 
+from os_sanic.definition import RouteCfg, StaticCfg, URIModel
 from os_sanic.utils import load_class, normalize_slash
-
-
-class URIModel(BaseModel):
-    uri: str
-
-    class Config:
-        allow_extra = True
-        allow_mutation = False
-
-
-class RouteCfg(URIModel):
-    view_class: str
-
-
-class StaticCfg(URIModel):
-    file_or_directory: str
 
 
 def adapt_uri(url_prefix, uri):

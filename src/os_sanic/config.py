@@ -4,7 +4,7 @@ from typing import List, Union
 from pydantic import BaseSettings, PositiveInt
 from sanic.config import Config
 
-from os_sanic.utils import LogLevel
+from os_sanic.definition import LogLevel
 
 SANIC_ENV_PREFIX = 'OS_SANIC_'
 

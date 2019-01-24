@@ -4,41 +4,13 @@ from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from inspect import isawaitable
-from typing import List
 
-from pydantic import BaseModel
-
-from os_sanic.extension import ExtensionCfg, ExtensionManager
-from os_sanic.log import getLogger
-from os_sanic.utils import NamedModel, load_module_from_pyfile
-from os_sanic.workflow import Workflowable
 from os_sanic import blueprint
-
-
-class AppCfg(NamedModel):
-    package: str
-    prefix: str = None
-    config: str = None
-
-    class Config:
-        allow_mutation = False
-
-
-class ApplicationCfg(BaseModel):
-    EXTENSIONS: List = []
-    ROUTES: List = []
-    STATICS: List = []
-
-    class Config:
-        allow_mutation = False
-        ignore_extra = True
-
-
-class Context(BaseModel):
-    app_cfg: AppCfg
-    core_cfg: ApplicationCfg
-    user_cfg: ApplicationCfg
-    runtime_path: str
+from os_sanic.definition import AppCfg, ApplicationCfg, ApplicationContext
+from os_sanic.extension import ExtensionManager
+from os_sanic.log import getLogger
+from os_sanic.utils import load_module_from_pyfile
+from os_sanic.definition import Workflowable
 
 
 class Application(Workflowable):
@@ -95,7 +67,7 @@ class Application(Workflowable):
                 load_module_from_pyfile(f).__dict__)
             runtime_path = os.path.dirname(f)
 
-        context = Context(
+        context = ApplicationContext(
             app_cfg=app_cfg,
             core_cfg=core_cfg,
             user_cfg=user_cfg,

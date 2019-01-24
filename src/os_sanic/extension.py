@@ -2,15 +2,9 @@ from collections import OrderedDict
 from functools import partial
 from inspect import isawaitable
 
-from os_sanic.utils import NamedModel, load_class
-from os_sanic.workflow import Workflowable
-
-
-class ExtensionCfg(NamedModel):
-    extension_class: str
-
-    class Config:
-        allow_mutation = False
+from os_sanic.definition import ExtensionCfg, NamedModel
+from os_sanic.utils import load_class
+from os_sanic.definition import Workflowable
 
 
 class Extension(Workflowable):
