@@ -1,10 +1,11 @@
+import inspect
 import os
 
 from sanic import Blueprint
-from sanic.views import HTTPMethodView
+from sanic.views import CompositionView, HTTPMethodView
 
-from os_sanic.definition import RouteCfg, StaticCfg, URIModel
-from os_sanic.utils import load_class, normalize_slash
+from os_sanic.prototype import AppCfg, RouteCfg, StaticCfg, URIModel
+from os_sanic.utils import load_obj, normalize_slash
 
 
 def adapt_uri(url_prefix, uri):
@@ -17,38 +18,51 @@ def adapt_uri(url_prefix, uri):
 
 
 def new_blueprint(application):
-    _prefix = application.app_cfg.prefix
+    app_cfg = application.app_cfg
+    prefix = app_cfg.url_prefix
 
-    if not _prefix:
-        _prefix = f'/{application.name}'
+    if not prefix:
+        prefix = f'/{app_cfg.name}'
 
-    prefix = normalize_slash(_prefix)
+    url_prefix = normalize_slash(prefix)
 
-    if not prefix == _prefix:
+    if not prefix == url_prefix:
         application.logger.warn(
-            f'Normalize prefix from \'{_prefix}\' to \'{prefix}\'')
+            f"Normalize prefix from '{prefix}' to '{url_prefix}'")
 
-    return Blueprint(application.name, url_prefix=prefix)
+    include = set(AppCfg.__fields__.keys()) - set(['package', 'config'])
+    return Blueprint(**app_cfg.copy(update={'url_prefix': url_prefix}).dict(include=include))
 
 
 def load_route(application, blueprint, route_cfg, user_cfg):
     config = route_cfg.copy(update=user_cfg.copy(
-        exclude=set(['view_class'])).dict())
+        exclude=set(['handler'])).dict())
 
     package = None
-    if config.view_class.startswith('.'):
+    if config.handler.startswith('.'):
         package = application.app_cfg.package
-    view_cls = load_class(
-        config.view_class, HTTPMethodView, package=package)
-
-    view_cls.application = application
-    view_cls.config = config
 
     real_uri = adapt_uri(blueprint.url_prefix, config.uri)
-    view = blueprint.add_route(view_cls.as_view(), real_uri)
+
+    include = inspect.getfullargspec(blueprint.add_route).args[3:]
+    handler = load_obj(config.handler, package=package)
+    if inspect.isclass(handler) and issubclass(handler, (HTTPMethodView, CompositionView)):
+        if issubclass(handler, HTTPMethodView):
+            handler.application = application
+            handler.config = config
+
+        blueprint.add_route(handler.as_view(), real_uri,
+                            config.dict(include=include))
+    elif inspect.isfunction(handler):
+        for method in config.methods:
+            call = getattr(blueprint, method.lower())
+            include = inspect.getfullargspec(call).args[2:]
+            call(real_uri, **config.dict(include=include))(handler)
+    else:
+        raise ValueError(f'Not supported type: {type(handler)}')
 
     pth = blueprint.url_prefix+real_uri
-    application.logger.debug(f'Load route, {pth} {view.view_class}')
+    application.logger.debug(f'Load route, {pth} {handler}')
 
 
 def load_routes(application, blueprint):
@@ -57,12 +71,12 @@ def load_routes(application, blueprint):
 
     for cfg in application.core_cfg.ROUTES:
         try:
-            if isinstance(cfg, tuple):
-                cfg = dict(uri=cfg[0], view_class=cfg[1])
-            route_cfg = RouteCfg(**cfg)
+            route_cfg = RouteCfg(**dict(zip(RouteCfg.__fields__.keys(), cfg))) \
+                if isinstance(cfg, tuple) \
+                else RouteCfg(**cfg)
 
-            load_route(application, blueprint, route_cfg, user_cfgs.get(
-                route_cfg.uri, route_cfg))
+            load_route(application, blueprint, route_cfg,
+                       user_cfgs.get(route_cfg.uri, route_cfg))
         except Exception as e:
             application.logger.error(f'Load route error, {e}, {cfg}')
 
@@ -88,15 +102,62 @@ def load_statics(application, blueprint):
     for cfg in application.core_cfg.STATICS:
         try:
             static_cfg = StaticCfg(**cfg)
-            load_static(application, blueprint, static_cfg, user_cfgs.get(
-                static_cfg.uri, static_cfg))
+            load_static(application, blueprint, static_cfg,
+                        user_cfgs.get(static_cfg.uri, static_cfg))
         except Exception as e:
             application.logger.error(f'Load static error, {e}, {cfg}')
 
 
+def load_middlewares(application, blueprint):
+    for mid in application.core_cfg.MIDDLEWARES:
+        try:
+            package = None
+            if mid.startswith('.'):
+                package = application.app_cfg.package
+
+            middleware = load_obj(mid, package=package)
+
+            attach_to = {1: 'request', 2: 'response'}.get(
+                len(inspect.getfullargspec(middleware).args))
+
+            blueprint.middleware(attach_to=attach_to)(middleware)
+
+            application.logger.debug(f'Load middleware {middleware}')
+
+        except Exception as e:
+            application.logger.error(f'Load middleware error, {e}, {mid}')
+
+
+def load_exception_handlers(application, blueprint):
+    for cfg in application.core_cfg.EXCEPTIONS:
+        try:
+            handler, exceptions = cfg
+            if isinstance(exceptions, str):
+                exceptions = [exceptions]
+
+            package = None
+            if handler.startswith('.'):
+                package = application.app_cfg.package
+
+            handler = load_obj(handler, package=package)
+            exceptions = [load_obj(e) for e in exceptions]
+
+            blueprint.exception(*exceptions)(handler)
+
+            application.logger.debug(
+                f'Load exception handler {handler}, {exceptions}')
+
+        except Exception as e:
+            application.logger.error(
+                f'Load exception handler error, {e}, {cfg}')
+
+
 def create(application):
     blueprint = new_blueprint(application)
-    load_routes(application, blueprint)
-    load_statics(application, blueprint)
+    for loader in [load_routes,
+                   load_middlewares,
+                   load_exception_handlers,
+                   load_statics]:
+        loader(application, blueprint)
     application.sanic.blueprint(blueprint)
     return blueprint

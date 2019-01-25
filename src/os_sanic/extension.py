@@ -2,9 +2,8 @@ from collections import OrderedDict
 from functools import partial
 from inspect import isawaitable
 
-from os_sanic.definition import ExtensionCfg, NamedModel
+from os_sanic.prototype import ExtensionCfg, NamedModel, Workflowable
 from os_sanic.utils import load_class
-from os_sanic.definition import Workflowable
 
 
 class Extension(Workflowable):

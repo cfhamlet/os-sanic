@@ -19,7 +19,7 @@ class CommandFinder(click.MultiCommand):
         command_packages = kwargs.get('command_packages', [])
         commands = {}
         for command_package in command_packages:
-            for cmd_module in walk_modules(command_package):
+            for cmd_module in walk_modules(command_package, skip_fail=False):
                 if hasattr(cmd_module, 'cli') and isinstance(cmd_module.cli, Command):
                     commands[cmd_module.__name__.split(
                         '.')[-1]] = cmd_module.cli

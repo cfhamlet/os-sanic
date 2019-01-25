@@ -44,6 +44,12 @@ def expected_cls(module, cls, base_class, include_base_class=False):
     return False
 
 
+def load_obj(obj_path, package=None):
+    module_path, obj_name = obj_path.rsplit('.', 1)
+    module = import_module(module_path, package=package)
+    return getattr(module, obj_name, None)
+
+
 def load_class(class_path, base_class, include_base_class=False, package=None):
     module_path, class_name = class_path.rsplit('.', 1)
     module = import_module(module_path, package=package)

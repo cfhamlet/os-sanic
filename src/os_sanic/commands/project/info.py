@@ -1,10 +1,14 @@
 import json
 import os
+import pickle
+from base64 import b64encode
 from collections import OrderedDict
+from json import JSONEncoder
 
 import click
 
 from os_sanic.commands.project.run import create_server
+from os_sanic.prototype import RouteCfg
 
 
 def server_info(server):
@@ -37,9 +41,19 @@ def extensions_info(app):
 def routes_info(app):
     routes_info = []
     for route in app.blueprint.routes:
-        view_cls = route.handler.view_class
-        routes_info.append(view_cls.config.copy(
-            update={'uri': route.uri, 'view_class': str(view_cls)}).dict())
+        handler = route.handler
+        config = None
+        if hasattr(handler, 'view_class'):
+            handler = handler.view_class
+            config = handler.config.copy(update={'handler': str(handler)})
+        else:
+            config = RouteCfg(handler=f"<func '{handler.__module__}.{handler.__name__}'>",
+                              **dict([(k, getattr(route, k))
+                                      for k in RouteCfg.__fields__.keys()
+                                      if hasattr(route, k) and k != 'handler']))
+        routes_info.append(config.copy(
+            update={'uri': route.uri,
+                    'methods': list(route.methods)}).dict())
     return routes_info
 
 
@@ -60,25 +74,25 @@ def app_info(app):
         update={'prefix': app.blueprint.url_prefix}).dict()
 
     for method in (extensions_info, routes_info, statics_info):
-        i=method(app)
+        i = method(app)
         if i:
-            info[method.__name__[:-5]]=i
+            info[method.__name__[:-5]] = i
 
     return info
 
 
 @click.command()
 @click.option('-c', '--config-file',
-              default = 'config.py',
-              show_default = True,
-              type = click.File(mode='r'),
-              help = 'Config file')
+              default='config.py',
+              show_default=True,
+              type=click.File(mode='r'),
+              help='Config file')
 @click.pass_context
 def cli(ctx, config_file):
     '''Show config details.'''
 
     ctx.ensure_object(dict)
 
-    server=create_server(ctx.obj['app'], config_file = config_file)
+    server = create_server(ctx.obj['app'], config_file=config_file)
     server_info(server)
     apps_info(server.application_manager)

@@ -1,14 +1,14 @@
+ROUTES = [
+    {
+        'uri': '{{uri}}',
+        'handler': '.handler.{{view_class}}',
+    },
+]
+
 EXTENSIONS = [
     {
         'name': '{{extension_name}}',
         'extension_class': '.extension.{{extension_class}}',
-    },
-]
-
-ROUTES = [
-    {
-        'uri': '{{uri}}',
-        'view_class': '.view.{{view_class}}',
     },
 ]
 
@@ -18,3 +18,19 @@ STATICS = [
         'file_or_directory': './static',
     },
 ]
+
+'''
+The middlewares and exception handler is not blueprint scope right now(v18.12).
+Please think carefully to use MIDDLEWARES and EXCEPTIONS.
+issue: https://github.com/huge-success/sanic/issues/37
+
+
+MIDDLEWARES = [
+    '.middleware.request_middleware',
+    '.middleware.response_middleware',
+]
+
+EXCEPTIONS = [
+    ('.exception.not_found', 'sanic.exceptions.NotFound'),
+]
+'''

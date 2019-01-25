@@ -6,11 +6,11 @@ from importlib import import_module
 from inspect import isawaitable
 
 from os_sanic import blueprint
-from os_sanic.definition import AppCfg, ApplicationCfg, ApplicationContext
 from os_sanic.extension import ExtensionManager
 from os_sanic.log import getLogger
+from os_sanic.prototype import (AppCfg, ApplicationCfg, ApplicationContext,
+                                Workflowable)
 from os_sanic.utils import load_module_from_pyfile
-from os_sanic.definition import Workflowable
 
 
 class Application(Workflowable):
