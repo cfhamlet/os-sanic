@@ -44,14 +44,14 @@ A framework to organize [Sanic](https://github.com/huge-success/sanic) project, 
 
 * Create app
 
-    App is designed as reusable unit. Each app may has some extensions as pluggins for loading/dumping data, managing db connection when server starting up/down. It should has [handlers](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html) for processing http/https/websocket requests. The routes(URI to handlers) are defined in ``app.py``. Besides, [serving static files](https://sanic.readthedocs.io/en/latest/sanic/static_files.html) is also helpful . You can check the ``example`` app for more details.
+    App is designed as reusable unit. Each app may has some extensions as pluggins for loading/dumping data, managing db connection when server starting up/down. It should has handlers for processing http/https/websocket requests. Routes(URIs to handlers) are necessary. Besides, [serving static files](https://sanic.readthedocs.io/en/latest/sanic/static_files.html) is also useful. You can check the ``example`` app for more details.
     
     
     ```
     python manage.py startproject first
     ```
     
-    This command will create a app in the apps directory. You should at least add the app package string into ``INSTALLED_APPS`` in the ``config.py`` manually to enable it.
+    This command will create a app named 'first' in the apps directory. You should add the app package string into ``INSTALLED_APPS`` in the ``config.py`` manually to enable it.
 
 * Create app with full feature
 
@@ -107,12 +107,13 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
     - ``name``: the app name, if not set will use ``package``'s last fragment
     - ``package``: the app's package
     - ``url_prefix``(alias ``prefix``): use this as the app's views prefix otherwise use app name
+    - ``config``: app's config file, same as the ``app.py`` file, but will cover the parameters defined in ``app.py``.
     
 * App definition
 
-    App is defined in the ``app.py``. ``EXTENSIONS``, ``ROUTES`` and ``STATICS`` are the core components.
+    App is defined in the ``app.py``. ``EXTENSIONS``, ``ROUTES`` and ``STATICS`` are the main components.
     
-    - ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding/dumping data, manage db connection when server staring up/down. ``name`` and ``extension_class`` are necessary, other params will pass to extension instance's config.
+    - ``EXTENSIONS`` are used as plugin mechanism. Can be used for loadding/dumping data, managing db connection when server staring up/down. ``name`` and ``extension_class`` are necessary, other parameters will pass to extension instance's config.
     
         ```
         EXTENSIONS = [
@@ -136,7 +137,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
         ````
         
         
-        More verbose style which can pass custom params: 
+        More verbose style which can pass custom parameters: 
     
 
         ```
@@ -149,7 +150,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
         ]
         ```
 
-    - ``STATICS`` are used for serving static files, [see](https://sanic.readthedocs.io/en/latest/sanic/static_files.html). ``file_or_directory`` can be absolute or relative path base on the appliction runtime config path.
+    - ``STATICS`` are used for serving [static files](https://sanic.readthedocs.io/en/latest/sanic/static_files.html). ``file_or_directory`` can be absolute or relative path base on the appliction runtime config path.
 
         ```
         STATICS = [
@@ -165,7 +166,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
 
 * Handler
 
-    The handler can be normal function, sanic [``HTTPMethodView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html) class or sanic [``CompositionView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#using-compositionview) instance. The params defined in the ``ROUTES`` will be attached to a config object. If you use ```HTTPMethodView``, the config can be accessed from the View class.
+    The handler can be normal function, sanic [``HTTPMethodView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html) class or sanic [``CompositionView``](https://sanic.readthedocs.io/en/latest/sanic/class_based_views.html#using-compositionview) instance. The parameters defined in the ``ROUTES`` will be attached to a config object. If you use ```HTTPMethodView``, the config can be accessed from the View class.
     
     ```
     from sanic.views import HTTPMethodView
@@ -183,15 +184,15 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
 
     The base class's members are ``config``, ``application`` and ``logger``
 
-    - ``config``: if you define extra params in the ``EXTENSIONS``, they will be attached to this config object
-    - ``application``: a project scope object for accessing all of the apps
+    - ``config``: if you define extra parameters in the ``EXTENSIONS``, they will be attached to this config object
+    - ``application``: current application object, can be used for accessing all the project apps
     - ``logger``, the built-in logger object
 
 
-    The extension class has two usefull methods invoked by the framework, ``setup``, ``cleanup``, they all can be normal method or async method
+    The extension class has two usefull methods invoked by the framework: ``setup``, ``cleanup``. They all can be sync or async.
 
     - ``setup``: called before server start
-    - ``cleanup``: called after server stop, if there are multi extensions configured in ``EXTENSIONS``, the cleanup methods execute order will from last extension to the first one
+    - ``cleanup``: called after server stop, if there are multi extensions configured in ``EXTENSIONS``, the cleanup methods execute order will from last extension to the first
 
 * application object
 
@@ -209,7 +210,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
                 ...
         ```
     
-    - it can be access in the view class
+    - it can be accessed in the view class
     
         ```
         from sanic.views import HTTPMethodView
