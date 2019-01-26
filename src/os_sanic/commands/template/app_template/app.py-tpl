@@ -35,6 +35,6 @@ MIDDLEWARES = [
 ]
 
 ERROR_HANDLERS = [
-    ('.exception.not_found', 'sanic.exceptions.NotFound'),
+    ('.error_handler.not_found', 'sanic.exceptions.NotFound'),
 ]
 {% endif %}
