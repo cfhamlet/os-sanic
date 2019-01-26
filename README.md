@@ -150,7 +150,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
         ]
         ```
 
-    - ``STATICS`` are used for serving [static files](https://sanic.readthedocs.io/en/latest/sanic/static_files.html). ``file_or_directory`` can be absolute or relative path base on the appliction runtime config path.
+    - ``STATICS`` are used for [serving static files](https://sanic.readthedocs.io/en/latest/sanic/static_files.html). ``file_or_directory`` can be absolute or relative path base on the appliction runtime config path.
 
         ```
         STATICS = [
