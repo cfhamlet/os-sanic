@@ -6,6 +6,10 @@ from importlib import import_module
 from pkgutil import iter_modules
 
 
+def repr_function(func):
+    return f"<func '{func.__module__}.{func.__qualname__}>'"
+
+
 def normalize_slash(tag, with_prefix_slash=True):
     tag = re.sub('[/]+', '/', tag)
 

@@ -19,18 +19,22 @@ STATICS = [
     },
 ]
 
-'''
-The middlewares and exception handler is not blueprint scope right now(v18.12).
-Please think carefully to use MIDDLEWARES and EXCEPTIONS.
-issue: https://github.com/huge-success/sanic/issues/37
 
+{% if full_feature %}
+'''
+The middleware and error handler are not just working on 
+blueprint scope right now(v18.12). They will affect the whole
+project. Please think carefully to use MIDDLEWARES and ERROR_HANDLERS.
+
+issue: https://github.com/huge-success/sanic/issues/37
+'''
 
 MIDDLEWARES = [
     '.middleware.request_middleware',
     '.middleware.response_middleware',
 ]
 
-EXCEPTIONS = [
+ERROR_HANDLERS = [
     ('.exception.not_found', 'sanic.exceptions.NotFound'),
 ]
-'''
+{% endif %}

@@ -21,7 +21,7 @@ def app_creation_params(app_name, base_path=None):
     return app_package, app_tpl_dir, app_dst_dir
 
 
-def create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir):
+def create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir, **kwargs):
 
     if os.path.exists(app_dst_dir):
         ctx.fail(f'App already existed, {app_dst_dir}')
@@ -33,26 +33,35 @@ def create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir):
         create_from_tpl(apps_tpl_dir, apps_dst_dir, ignores=['*.pyc', ])
 
     config = create()
+    config.app_name = app_name
     config.extension_class = config.extension_name = app_name.capitalize()
     config.uri = '/'
     config.view_class = config.extension_class + 'View'
+
+    ignores = ['*.pyc']
+
+    config.full_feature = kwargs.get('full_feature', False)
+    if not config.full_feature:
+        ignores.extend(['middleware.py-tpl', 'exception.py-tpl'])
     create_from_tpl(app_tpl_dir, app_dst_dir,
-                    ignores=['*.pyc', ], **config)
+                    ignores=ignores, **config)
 
 
 @click.command()
 @click.argument('app-name', callback=valid_name)
+@click.option('--full-feature', is_flag=True,  help='Create app with full feature.')
 @click.pass_context
-def cli(ctx, app_name):
+def cli(ctx, app_name, full_feature):
     '''Create new application.'''
 
     app_package, app_tpl_dir, app_dst_dir = app_creation_params(app_name)
-    create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir)
+    create_app(ctx, app_name, app_package, app_tpl_dir,
+               app_dst_dir, full_feature=full_feature)
 
     click.echo(f'New os-sanic app: {app_name}\n')
     click.echo('Use app template:')
     click.echo(f'    {app_tpl_dir}\n')
     click.echo('Create app in:')
     click.echo(f'    {app_dst_dir}\n')
-    click.echo('You should add app package into INSTALLED_APPS:')
+    click.echo('Please add app package into INSTALLED_APPS:')
     click.echo(f'    \'{app_package}\'')

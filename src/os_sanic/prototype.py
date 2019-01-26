@@ -29,7 +29,7 @@ class ApplicationCfg(BaseModel):
     ROUTES: List = []
     STATICS: List = []
     MIDDLEWARES: List = []
-    EXCEPTIONS: List = []
+    ERROR_HANDLERS: List = []
 
     class Config:
         allow_mutation = False

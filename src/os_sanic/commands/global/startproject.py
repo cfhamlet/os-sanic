@@ -12,8 +12,9 @@ from os_sanic.config import SANIC_ENV_PREFIX, create
 @click.command()
 @click.argument('project-name', callback=valid_name)
 @click.option('--with-app', callback=valid_name, required=False, help='Create project with app.')
+@click.option('--full-feature', is_flag=True,  help='Create app with full feature.')
 @click.pass_context
-def cli(ctx, project_name, with_app):
+def cli(ctx, project_name, with_app, full_feature):
     '''Create new project.'''
 
     base_tpl_dir = os.path.join(
@@ -42,7 +43,8 @@ def cli(ctx, project_name, with_app):
                     ignores=['*.pyc', ], **config)
 
     if with_app:
-        create_app(ctx, app_name, app_package, app_tpl_dir, app_dst_dir)
+        create_app(ctx, app_name, app_package, app_tpl_dir,
+                   app_dst_dir, full_feature=full_feature)
 
     click.echo(f'New os-sanic project: {project_name}\n')
     click.echo('Use project template:')

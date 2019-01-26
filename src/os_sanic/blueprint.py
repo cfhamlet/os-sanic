@@ -128,8 +128,8 @@ def load_middlewares(application, blueprint):
             application.logger.error(f'Load middleware error, {e}, {mid}')
 
 
-def load_exception_handlers(application, blueprint):
-    for cfg in application.core_cfg.EXCEPTIONS:
+def load_error_handlers(application, blueprint):
+    for cfg in application.core_cfg.ERROR_HANDLERS:
         try:
             handler, exceptions = cfg
             if isinstance(exceptions, str):
@@ -145,18 +145,18 @@ def load_exception_handlers(application, blueprint):
             blueprint.exception(*exceptions)(handler)
 
             application.logger.debug(
-                f'Load exception handler {handler}, {exceptions}')
+                f'Load error handler {handler}, {exceptions}')
 
         except Exception as e:
             application.logger.error(
-                f'Load exception handler error, {e}, {cfg}')
+                f'Load error handler, {e}, {cfg}')
 
 
 def create(application):
     blueprint = new_blueprint(application)
     for loader in [load_routes,
                    load_middlewares,
-                   load_exception_handlers,
+                   load_error_handlers,
                    load_statics]:
         loader(application, blueprint)
     application.sanic.blueprint(blueprint)

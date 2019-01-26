@@ -9,6 +9,7 @@ import click
 
 from os_sanic.commands.project.run import create_server
 from os_sanic.prototype import RouteCfg
+from os_sanic.utils import repr_function
 
 
 def server_info(server):
@@ -47,7 +48,7 @@ def routes_info(app):
             handler = handler.view_class
             config = handler.config.copy(update={'handler': str(handler)})
         else:
-            config = RouteCfg(handler=f"<func '{handler.__module__}.{handler.__name__}'>",
+            config = RouteCfg(handler=repr_function(handler),
                               **dict([(k, getattr(route, k))
                                       for k in RouteCfg.__fields__.keys()
                                       if hasattr(route, k) and k != 'handler']))
@@ -69,11 +70,38 @@ def statics_info(app):
     return statics_info
 
 
+def middlewares_info(app):
+    middlewares_info = []
+    for middleware in app.blueprint.middlewares:
+        middleware_info = {
+            'middleware': repr_function(middleware.middleware),
+            'attach_to': middleware.kwargs['attach_to']
+        }
+        middlewares_info.append(middleware_info)
+
+    return middlewares_info
+
+
+def error_handlers_info(app):
+    error_handlers_info = []
+    for exception in app.blueprint.exceptions:
+        exception_info = {
+            'handler': repr_function(exception.handler),
+            'exceptions': [str(e) for e in exception.args],
+        }
+        error_handlers_info.append(exception_info)
+    return error_handlers_info
+
+
 def app_info(app):
     info = app.app_cfg.copy(
         update={'prefix': app.blueprint.url_prefix}).dict()
 
-    for method in (extensions_info, routes_info, statics_info):
+    for method in (extensions_info,
+                   routes_info,
+                   statics_info,
+                   middlewares_info,
+                   error_handlers_info):
         i = method(app)
         if i:
             info[method.__name__[:-5]] = i
@@ -93,6 +121,7 @@ def cli(ctx, config_file):
 
     ctx.ensure_object(dict)
 
-    server = create_server(ctx.obj['app'], config_file=config_file)
+    server = create_server(ctx.obj['app'],
+                           config_file=config_file)
     server_info(server)
     apps_info(server.application_manager)
