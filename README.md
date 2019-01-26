@@ -144,7 +144,7 @@ blueprint scope right now(v18.12). They will affect on the whole project. [issue
         ROUTES = [
             {
                 'uri': '/',
-                'view_class': '.view.ExampleView',
+                'handler': '.view.ExampleView',
                 'costom_key': 'custom_value',
             }
         ]
