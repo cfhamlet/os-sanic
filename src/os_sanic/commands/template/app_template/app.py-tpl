@@ -1,14 +1,14 @@
+ROUTES = [
+    {
+        'uri': '{{uri}}',
+        'handler': '.handler.{{view_class}}',
+    },
+]
+
 EXTENSIONS = [
     {
         'name': '{{extension_name}}',
         'extension_class': '.extension.{{extension_class}}',
-    },
-]
-
-ROUTES = [
-    {
-        'uri': '{{uri}}',
-        'view_class': '.view.{{view_class}}',
     },
 ]
 
@@ -18,3 +18,23 @@ STATICS = [
         'file_or_directory': './static',
     },
 ]
+
+
+{% if full_feature %}
+'''
+The middleware and error handler are not just working on 
+blueprint scope right now(v18.12). They will affect on the whole
+project. Please think carefully to use MIDDLEWARES and ERROR_HANDLERS.
+
+issue: https://github.com/huge-success/sanic/issues/37
+'''
+
+MIDDLEWARES = [
+    '.middleware.request_middleware',
+    '.middleware.response_middleware',
+]
+
+ERROR_HANDLERS = [
+    ('.error_handler.not_found', 'sanic.exceptions.NotFound'),
+]
+{% endif %}

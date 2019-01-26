@@ -75,7 +75,7 @@ def test_startproject_001(new_project):
         'apps/__init__.py',
         f'apps/{app_name}/__init__.py',
         f'apps/{app_name}/app.py',
-        f'apps/{app_name}/view.py',
+        f'apps/{app_name}/handler.py',
         f'apps/{app_name}/extension.py',
     ]
     print(proj_path)
@@ -90,7 +90,7 @@ def test_start_app(new_project, cov_env):
         app_name = 'yyy'
         call('manage.py', f'startapp {app_name}', cov_env)
         prefix = f'apps/{app_name}/'
-        for ff in ('', 'app.py', 'extension.py', '__init__.py', 'view.py'):
+        for ff in ('', 'app.py', 'extension.py', '__init__.py', 'handler.py'):
             ff = os.path.join(prefix, ff)
             assert os.path.exists(ff)
 
@@ -104,7 +104,7 @@ def test_info(new_project, cov_env):
         f'"name": "{app_name}",',
         f'"package": "apps.{app_name}",',
         f'<class \'apps.{app_name}.extension.{app_name.capitalize()}\'>',
-        f'<class \'apps.{app_name}.view.{app_name.capitalize()}View\'>',
+        f'<class \'apps.{app_name}.handler.{app_name.capitalize()}View\'>',
     ]
     with cd(proj_path):
         stdout, _ = call('manage.py', 'info', cov_env)

@@ -2,21 +2,12 @@ import collections
 import inspect
 import re
 import types
-from enum import Enum
 from importlib import import_module
-from logging import _nameToLevel
 from pkgutil import iter_modules
-from pydantic import BaseModel
-
-LogLevel = Enum('LogLevel', [(k, k) for k in _nameToLevel], type=str)
-LogLevel.__repr__ = lambda x: x.name
 
 
-class NamedModel(BaseModel):
-    name: str
-
-    class Config:
-        allow_extra = True
+def repr_function(func):
+    return f"<func '{func.__module__}.{func.__qualname__}>'"
 
 
 def normalize_slash(tag, with_prefix_slash=True):
@@ -55,6 +46,12 @@ def expected_cls(module, cls, base_class, include_base_class=False):
              else cls != base_class):
         return True
     return False
+
+
+def load_obj(obj_path, package=None):
+    module_path, obj_name = obj_path.rsplit('.', 1)
+    module = import_module(module_path, package=package)
+    return getattr(module, obj_name, None)
 
 
 def load_class(class_path, base_class, include_base_class=False, package=None):

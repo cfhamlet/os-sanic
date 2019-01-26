@@ -4,37 +4,13 @@ from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from inspect import isawaitable
-from typing import List
 
-from pydantic import BaseModel
-
-from os_sanic.extension import ExtensionCfg, ExtensionManager
-from os_sanic.log import getLogger
-from os_sanic.utils import NamedModel, load_module_from_pyfile
-from os_sanic.workflow import Workflowable
 from os_sanic import blueprint
-
-
-class AppCfg(NamedModel):
-    package: str
-    prefix: str = None
-    config: str = None
-
-
-class ApplicationCfg(BaseModel):
-    EXTENSIONS: List = []
-    ROUTES: List = []
-    STATICS: List = []
-
-    class Config:
-        ignore_extra = True
-
-
-class Context(BaseModel):
-    app_cfg: AppCfg
-    core_cfg: ApplicationCfg
-    user_cfg: ApplicationCfg
-    runtime_path: str
+from os_sanic.extension import ExtensionManager
+from os_sanic.log import getLogger
+from os_sanic.prototype import (AppCfg, ApplicationCfg, ApplicationContext,
+                                Workflowable)
+from os_sanic.utils import load_module_from_pyfile
 
 
 class Application(Workflowable):
@@ -63,8 +39,8 @@ class Application(Workflowable):
         return self.application_manager.sanic
 
     def get_extension(self, extension_path):
-        if '.' not in extension_path:
-            extension_path = '.'.join((self.name, extension_path))
+        if '/' not in extension_path:
+            extension_path = '/'.join((self.name, extension_path))
 
         return self.application_manager.get_extension(extension_path)
 
@@ -91,7 +67,7 @@ class Application(Workflowable):
                 load_module_from_pyfile(f).__dict__)
             runtime_path = os.path.dirname(f)
 
-        context = Context(
+        context = ApplicationContext(
             app_cfg=app_cfg,
             core_cfg=core_cfg,
             user_cfg=user_cfg,
@@ -127,7 +103,7 @@ class ApplicationManager(Workflowable):
         return self._apps[name]
 
     def get_extension(self, extension_path):
-        app_name, extension_name = extension_path.split('.')
+        app_name, extension_name = extension_path.split('/', maxsplit=1)
         app = self.get_app(app_name)
         return app.extension_manager.get_extension(extension_name)
 

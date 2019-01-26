@@ -8,7 +8,7 @@ EXTENSIONS = [
 ROUTES = [
     {
         'uri': '/',
-        'view_class': '.view.Case02View'
+        'handler': '.view.Case02View'
     },
 ]
 

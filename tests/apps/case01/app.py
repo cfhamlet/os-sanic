@@ -9,7 +9,7 @@ ROUTES = [
     ('/', '.view.Case01View'),
     {
         'uri': '/config',
-        'view_class': '.view.Case02View',
+        'handler': '.view.Case02View',
         'key01': 'value01',
     }
 ]

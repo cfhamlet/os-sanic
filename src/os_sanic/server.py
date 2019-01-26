@@ -33,7 +33,7 @@ class Server(object):
         await getattr(self.application_manager, method)()
 
     def _run_args(self):
-        argspec = inspect.getargspec(self.sanic.run)
+        argspec = inspect.getfullargspec(self.sanic.run)
         run_args = {}
         offset = len(argspec.args)-len(argspec.defaults)
         for idx in range(len(argspec.defaults)-1, -1, -1):

@@ -1,0 +1,5 @@
+def request_middleware(request):
+    pass
+
+def response_middleware(request, response):
+    pass
