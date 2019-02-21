@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Set, Union
 
-from pydantic import BaseModel, Schema, ValidationError, validator
+from pydantic import BaseModel, Schema, validator
 from sanic.constants import HTTP_METHODS
 
 
@@ -76,7 +76,7 @@ class RouteCfg(URIModel):
         invalid = vv - set(list(HTTP_METHODS) + ['WEBSOCKET'])
 
         if invalid:
-            raise ValidationError(f'Invalid methods {invalid}')
+            raise ValueError(f'Invalid methods {invalid}')
         return vv
 
 
