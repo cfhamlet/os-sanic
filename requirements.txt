@@ -1,4 +1,4 @@
-sanic==18.12
+sanic==20.12.6
 jinja2
 click
 pydantic
